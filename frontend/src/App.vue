@@ -1,42 +1,44 @@
-<script setup>
+<script setup lang="ts">
 import { onMounted, ref } from 'vue'
 
-import { api } from './api'
+import { healthRetrieve, itemsCreate, itemsList, type Item } from '@/api'
 
 const health = ref('checking…')
-const items = ref([])
+const items = ref < Item[] > ([])
 const name = ref('')
 const description = ref('')
 const error = ref('')
 
 async function loadItems() {
-  const data = await api.listItems()
-  // The API is paginated: results live under `results`.
-  items.value = data.results ?? data
+  const { data } = await itemsList()
+  // The list endpoint is paginated: rows live under `results`.
+  items.value = data?.results ?? []
 }
 
 async function addItem() {
   if (!name.value.trim()) return
   error.value = ''
-  try {
-    await api.createItem({ name: name.value, description: description.value })
-    name.value = ''
-    description.value = ''
-    await loadItems()
-  } catch (e) {
-    error.value = e.message
+  const { error: err } = await itemsCreate({
+    body: { name: name.value, description: description.value },
+  })
+  if (err) {
+    error.value = 'Could not create item'
+    return
   }
+  name.value = ''
+  description.value = ''
+  await loadItems()
 }
 
 onMounted(async () => {
-  try {
-    const res = await api.health()
-    health.value = res.status
-    await loadItems()
-  } catch (e) {
+  const { data, error: err } = await healthRetrieve()
+  if (err || !data) {
     health.value = 'unreachable'
-    error.value = e.message
+    error.value = 'Backend is unreachable'
+    return
   }
+  health.value = data.status
+  await loadItems()
 })
 </script>
 
