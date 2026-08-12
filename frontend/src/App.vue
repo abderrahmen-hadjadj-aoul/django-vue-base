@@ -1,70 +1,78 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 
-import { healthRetrieve, itemsCreate, itemsList, type Item } from '@/api'
+import { useAuth } from '@/stores/auth'
 
-const health = ref('checking…')
-const items = ref < Item[] > ([])
-const name = ref('')
-const description = ref('')
-const error = ref('')
+const { user, isAuthenticated, logout } = useAuth()
+const router = useRouter()
 
-async function loadItems() {
-  const { data } = await itemsList()
-  // The list endpoint is paginated: rows live under `results`.
-  items.value = data?.results ?? []
+async function onLogout() {
+  await logout()
+  await router.replace('/login')
 }
-
-async function addItem() {
-  if (!name.value.trim()) return
-  error.value = ''
-  const { error: err } = await itemsCreate({
-    body: { name: name.value, description: description.value },
-  })
-  if (err) {
-    error.value = 'Could not create item'
-    return
-  }
-  name.value = ''
-  description.value = ''
-  await loadItems()
-}
-
-onMounted(async () => {
-  const { data, error: err } = await healthRetrieve()
-  if (err || !data) {
-    health.value = 'unreachable'
-    error.value = 'Backend is unreachable'
-    return
-  }
-  health.value = data.status
-  await loadItems()
-})
 </script>
 
 <template>
-  <main>
-    <h1>Django + Vue Base</h1>
-    <p class="status">
-      Backend health:
-      <span :class="['badge', health === 'ok' ? 'ok' : 'bad']">{{ health }}</span>
-    </p>
+  <header class="topbar">
+    <RouterLink to="/" class="brand">Django + Vue Base</RouterLink>
+    <nav v-if="isAuthenticated">
+      <RouterLink to="/">Home</RouterLink>
+      <RouterLink to="/account">Account</RouterLink>
+      <span class="who">{{ user?.email }}</span>
+      <button type="button" class="link-btn" @click="onLogout">Log out</button>
+    </nav>
+  </header>
 
-    <section>
-      <h2>Items</h2>
-      <form @submit.prevent="addItem">
-        <input v-model="name" placeholder="Name" required />
-        <input v-model="description" placeholder="Description (optional)" />
-        <button type="submit">Add</button>
-      </form>
-      <p v-if="error" class="error">{{ error }}</p>
-      <ul>
-        <li v-for="item in items" :key="item.id">
-          <strong>{{ item.name }}</strong>
-          <span v-if="item.description"> — {{ item.description }}</span>
-        </li>
-        <li v-if="items.length === 0" class="empty">No items yet.</li>
-      </ul>
-    </section>
+  <main>
+    <RouterView />
   </main>
 </template>
+
+<style scoped>
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 1.5rem;
+  border-bottom: 1px solid #e5e5ec;
+  background: white;
+}
+
+.brand {
+  font-weight: 700;
+  color: #1a1a2e;
+  text-decoration: none;
+}
+
+nav {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+nav a {
+  color: #369870;
+  text-decoration: none;
+}
+
+.who {
+  color: #555;
+  font-size: 0.9rem;
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  color: #b42318;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
+.link-btn:hover {
+  background: none;
+  text-decoration: underline;
+}
+</style>

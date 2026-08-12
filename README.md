@@ -48,8 +48,10 @@ python manage.py runserver    # http://127.0.0.1:8000
 
 Example endpoints:
 
-- `GET  /api/health/` → `{"status": "ok"}`
-- `GET/POST /api/items/`, `GET/PUT/PATCH/DELETE /api/items/{id}/`
+- `GET  /api/health/` → `{"status": "ok"}` (public)
+- `GET/POST /api/items/`, `GET/PUT/PATCH/DELETE /api/items/{id}/` (**auth required**)
+- Auth (`/api/auth/`): `csrf/`, `register/`, `login/`, `logout/`, `me/`,
+  `password/change/`, `password/reset/`, `password/reset/confirm/`
 - `GET  /api/schema/` → OpenAPI schema · `/api/docs/` → Swagger UI
 - `/admin/` (run `python manage.py createsuperuser` first)
 
@@ -99,6 +101,47 @@ Both `backend/openapi.json` and `frontend/src/api/generated/` are committed so a
 fresh clone builds without running the backend. The base URL is configured once
 in `src/api/index.ts` (from `VITE_API_BASE_URL`, empty by default so the dev
 proxy handles it).
+
+## Authentication
+
+The template ships with **session-cookie authentication** (Django sessions +
+CSRF), which is the natural fit for a first-party SPA served from the same
+origin as the API. DRF defaults to `IsAuthenticated`, so **new endpoints are
+private unless they opt out** with `permission_classes = [AllowAny]` (see the
+`health` view and the auth endpoints).
+
+Backend pieces live in the `accounts` app (`/api/auth/…`): register, login,
+logout, current-user (`me`), password change, and a password reset flow (request
++ confirm). Password-reset emails use the console backend by default (printed to
+the terminal); configure `EMAIL_BACKEND`/SMTP for production.
+
+**Credentials are email + password — there is no username.** The template keeps
+Django's default User model but stores the (lowercased) email in the `username`
+field as well, so Django's built-in auth works and the email stays unique. If a
+project needs a separate username, swap in a custom `AUTH_USER_MODEL`.
+
+How the cookie flow works:
+
+1. The SPA calls `GET /api/auth/csrf/` once on startup to receive the readable
+   `csrftoken` cookie.
+2. The API client sends credentials on every request and echoes the token back
+   in the `X-CSRFToken` header on unsafe methods (configured once in
+   `frontend/src/api/index.ts`).
+3. `login`/`register` start a session; `logout` ends it.
+
+Frontend integration uses **vue-router** with a route guard plus a small auth
+store:
+
+```
+frontend/src/
+├── stores/auth.ts   # reactive user state + login/register/logout/... actions
+├── router/index.ts  # routes + guard (redirects to /login when unauthenticated)
+└── views/           # HomeView (protected) + Login/Register/Forgot/Reset/Account
+```
+
+New env vars (see `backend/.env.example`): `CSRF_TRUSTED_ORIGINS`,
+`FRONTEND_URL`, `EMAIL_BACKEND`, `DEFAULT_FROM_EMAIL`, `SESSION_COOKIE_SECURE`,
+`CSRF_COOKIE_SECURE`.
 
 ## Typical workflow
 

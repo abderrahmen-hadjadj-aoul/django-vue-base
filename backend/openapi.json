@@ -6,6 +6,319 @@
         "description": "API for the django-vue-base project."
     },
     "paths": {
+        "/api/auth/csrf/": {
+            "get": {
+                "operationId": "auth_csrf_retrieve",
+                "description": "Set the CSRF cookie so the SPA can read it and echo it back in headers.",
+                "tags": [
+                    "auth"
+                ],
+                "security": [
+                    {
+                        "cookieAuth": []
+                    },
+                    {}
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Detail"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/auth/login/": {
+            "post": {
+                "operationId": "auth_login_create",
+                "description": "Authenticate with username + password and start a session.",
+                "tags": [
+                    "auth"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Login"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Login"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Login"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "cookieAuth": []
+                    },
+                    {}
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/User"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/auth/logout/": {
+            "post": {
+                "operationId": "auth_logout_create",
+                "description": "End the current session.",
+                "tags": [
+                    "auth"
+                ],
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Detail"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/auth/me/": {
+            "get": {
+                "operationId": "auth_me_retrieve",
+                "description": "Return the currently authenticated user.",
+                "tags": [
+                    "auth"
+                ],
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/User"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/auth/password/change/": {
+            "post": {
+                "operationId": "auth_password_change_create",
+                "description": "Change the authenticated user's password (keeps them logged in).",
+                "tags": [
+                    "auth"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PasswordChange"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PasswordChange"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PasswordChange"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Detail"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/auth/password/reset/": {
+            "post": {
+                "operationId": "auth_password_reset_create",
+                "description": "Email a password-reset link. Always succeeds so we don't leak which\nemail addresses are registered.",
+                "tags": [
+                    "auth"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PasswordResetRequest"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PasswordResetRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PasswordResetRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "cookieAuth": []
+                    },
+                    {}
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Detail"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/auth/password/reset/confirm/": {
+            "post": {
+                "operationId": "auth_password_reset_confirm_create",
+                "description": "Set a new password from a valid reset token.",
+                "tags": [
+                    "auth"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PasswordResetConfirm"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PasswordResetConfirm"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PasswordResetConfirm"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "cookieAuth": []
+                    },
+                    {}
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Detail"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/auth/register/": {
+            "post": {
+                "operationId": "auth_register_create",
+                "description": "Create a new account and log the user in.",
+                "tags": [
+                    "auth"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Register"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Register"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Register"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "cookieAuth": []
+                    },
+                    {}
+                ],
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/User"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/health/": {
             "get": {
                 "operationId": "health_retrieve",
@@ -54,8 +367,7 @@
                 "security": [
                     {
                         "cookieAuth": []
-                    },
-                    {}
+                    }
                 ],
                 "responses": {
                     "200": {
@@ -99,8 +411,7 @@
                 "security": [
                     {
                         "cookieAuth": []
-                    },
-                    {}
+                    }
                 ],
                 "responses": {
                     "201": {
@@ -137,8 +448,7 @@
                 "security": [
                     {
                         "cookieAuth": []
-                    },
-                    {}
+                    }
                 ],
                 "responses": {
                     "200": {
@@ -193,8 +503,7 @@
                 "security": [
                     {
                         "cookieAuth": []
-                    },
-                    {}
+                    }
                 ],
                 "responses": {
                     "200": {
@@ -248,8 +557,7 @@
                 "security": [
                     {
                         "cookieAuth": []
-                    },
-                    {}
+                    }
                 ],
                 "responses": {
                     "200": {
@@ -284,8 +592,7 @@
                 "security": [
                     {
                         "cookieAuth": []
-                    },
-                    {}
+                    }
                 ],
                 "responses": {
                     "204": {
@@ -297,6 +604,18 @@
     },
     "components": {
         "schemas": {
+            "Detail": {
+                "type": "object",
+                "description": "A simple `{ \"detail\": \"...\" }` response body used across auth endpoints.",
+                "properties": {
+                    "detail": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "detail"
+                ]
+            },
             "HealthResponse": {
                 "type": "object",
                 "properties": {
@@ -334,6 +653,24 @@
                     "name"
                 ]
             },
+            "Login": {
+                "type": "object",
+                "description": "Credentials for session login (email + password).",
+                "properties": {
+                    "email": {
+                        "type": "string",
+                        "format": "email"
+                    },
+                    "password": {
+                        "type": "string",
+                        "writeOnly": true
+                    }
+                },
+                "required": [
+                    "email",
+                    "password"
+                ]
+            },
             "PaginatedItemList": {
                 "type": "object",
                 "required": [
@@ -365,6 +702,58 @@
                     }
                 }
             },
+            "PasswordChange": {
+                "type": "object",
+                "description": "Change the password of the currently authenticated user.",
+                "properties": {
+                    "old_password": {
+                        "type": "string",
+                        "writeOnly": true
+                    },
+                    "new_password": {
+                        "type": "string",
+                        "writeOnly": true
+                    }
+                },
+                "required": [
+                    "new_password",
+                    "old_password"
+                ]
+            },
+            "PasswordResetConfirm": {
+                "type": "object",
+                "description": "Set a new password using the token emailed to the user.",
+                "properties": {
+                    "uid": {
+                        "type": "string"
+                    },
+                    "token": {
+                        "type": "string"
+                    },
+                    "new_password": {
+                        "type": "string",
+                        "writeOnly": true
+                    }
+                },
+                "required": [
+                    "new_password",
+                    "token",
+                    "uid"
+                ]
+            },
+            "PasswordResetRequest": {
+                "type": "object",
+                "description": "Request a password-reset email for the given address.",
+                "properties": {
+                    "email": {
+                        "type": "string",
+                        "format": "email"
+                    }
+                },
+                "required": [
+                    "email"
+                ]
+            },
             "PatchedItem": {
                 "type": "object",
                 "properties": {
@@ -385,6 +774,77 @@
                         "readOnly": true
                     }
                 }
+            },
+            "Register": {
+                "type": "object",
+                "description": "Validates and creates a new user account, keyed by email.",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "email": {
+                        "title": "Email address",
+                        "oneOf": [
+                            {
+                                "type": "string",
+                                "format": "email",
+                                "maxLength": 254
+                            },
+                            {
+                                "type": "string",
+                                "maxLength": 0
+                            }
+                        ]
+                    },
+                    "password": {
+                        "type": "string",
+                        "writeOnly": true
+                    },
+                    "first_name": {
+                        "type": "string",
+                        "maxLength": 150
+                    },
+                    "last_name": {
+                        "type": "string",
+                        "maxLength": 150
+                    }
+                },
+                "required": [
+                    "email",
+                    "id",
+                    "password"
+                ]
+            },
+            "User": {
+                "type": "object",
+                "description": "The public shape of the authenticated user (never exposes the password).\n\nCredentials are email + password; the email is the account's identity, so\n``username`` is not exposed (it holds a copy of the email internally — see\nRegisterSerializer).",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "readOnly": true,
+                        "title": "Email address"
+                    },
+                    "first_name": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "last_name": {
+                        "type": "string",
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "email",
+                    "first_name",
+                    "id",
+                    "last_name"
+                ]
             }
         },
         "securitySchemes": {

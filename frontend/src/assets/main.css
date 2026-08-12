@@ -84,3 +84,26 @@ li {
 .error {
   color: #b42318;
 }
+
+.success {
+  color: #1a7f37;
+}
+
+/* Auth pages: stack inputs into a narrow column. */
+.auth {
+  max-width: 360px;
+}
+
+.auth form {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.links {
+  margin-top: 1rem;
+  font-size: 0.9rem;
+}
+
+.links a {
+  color: #369870;
+}

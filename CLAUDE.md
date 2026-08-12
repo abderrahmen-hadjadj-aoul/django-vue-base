@@ -21,11 +21,15 @@ features that a consumer of the template wouldn't want.
 ## Layout
 
 ```
-backend/    Django project: config/ (settings, urls), api/ (example app)
+backend/    Django project: config/ (settings, urls), api/ (example app),
+            accounts/ (session-cookie auth: /api/auth/…)
             openapi.json  <- exported schema, committed
 frontend/   Vue 3 + Vite + TS
             src/api/generated/  <- generated SDK, committed, DO NOT hand-edit
-            src/api/index.ts    <- configures client base URL, re-exports SDK
+            src/api/index.ts    <- client config: base URL, credentials, CSRF interceptor
+            src/stores/auth.ts  <- reactive auth store (useAuth)
+            src/router/         <- vue-router + auth route guard
+            src/views/          <- HomeView (protected) + auth pages
             openapi-ts.config.ts
 mprocs.yaml Runs both dev servers together
 ```
@@ -69,6 +73,35 @@ under `src/api/generated/` by hand — they are overwritten.
 New DRF endpoints should produce a clean schema. For non-serializer responses
 (like the `health` view), add `@extend_schema(...)` so the generated types stay
 accurate.
+
+## Authentication (session cookies)
+
+- Auth lives in the `accounts` app under `/api/auth/…` (register, login, logout,
+  me, password change, password reset request/confirm). It uses Django's session
+  auth with CSRF — no tokens — because the SPA is first-party/same-origin.
+- **Credentials are email + password; there is no username.** We keep Django's
+  default User model but store the email in the `username` field too (see
+  `RegisterSerializer.create`), so `authenticate()`/`login()` work unchanged and
+  email uniqueness is enforced by username's unique constraint. Emails are
+  normalized to lowercase on register and login (username matching is
+  case-sensitive, emails are not). `username` is never exposed by the API — treat
+  email as the sole identity. If you ever need a real username field, switch to a
+  custom `AUTH_USER_MODEL` instead of undoing this.
+- **DRF default permission is `IsAuthenticated`.** New endpoints are private by
+  default; add `permission_classes = [AllowAny]` to opt out (as `health` and the
+  auth views do). When you add a public endpoint, remember this.
+- CSRF: the frontend calls `authCsrfRetrieve()` on startup, and the client
+  interceptor in `src/api/index.ts` sends `credentials: 'include'` plus the
+  `X-CSRFToken` header on unsafe methods. Don't hand-write fetch calls that skip
+  this. Tests use `APIClient(enforce_csrf_checks=True)` to mirror the browser.
+- Frontend state is `useAuth()` in `src/stores/auth.ts` (a reactive singleton,
+  deliberately not Pinia to keep deps light). The router guard in `src/router/`
+  calls `bootstrap()` once, then redirects unauthenticated users to `/login`.
+- Password reset emails go through Django's email backend (console by default —
+  see `EMAIL_BACKEND`); links are built from `FRONTEND_URL` and point at the
+  `/reset-password?uid=…&token=…` route.
+- After changing any auth serializer/view, regenerate the schema + client (same
+  two-step flow as above) so the frontend stays typed.
 
 ## Conventions
 

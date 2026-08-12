@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { HealthRetrieveData, HealthRetrieveResponses, ItemsCreateData, ItemsCreateResponses, ItemsDestroyData, ItemsDestroyResponses, ItemsListData, ItemsListResponses, ItemsPartialUpdateData, ItemsPartialUpdateResponses, ItemsRetrieveData, ItemsRetrieveResponses, ItemsUpdateData, ItemsUpdateResponses } from './types.gen';
+import type { AuthCsrfRetrieveData, AuthCsrfRetrieveResponses, AuthLoginCreateData, AuthLoginCreateResponses, AuthLogoutCreateData, AuthLogoutCreateResponses, AuthMeRetrieveData, AuthMeRetrieveResponses, AuthPasswordChangeCreateData, AuthPasswordChangeCreateResponses, AuthPasswordResetConfirmCreateData, AuthPasswordResetConfirmCreateResponses, AuthPasswordResetCreateData, AuthPasswordResetCreateResponses, AuthRegisterCreateData, AuthRegisterCreateResponses, HealthRetrieveData, HealthRetrieveResponses, ItemsCreateData, ItemsCreateResponses, ItemsDestroyData, ItemsDestroyResponses, ItemsListData, ItemsListResponses, ItemsPartialUpdateData, ItemsPartialUpdateResponses, ItemsRetrieveData, ItemsRetrieveResponses, ItemsUpdateData, ItemsUpdateResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -17,6 +17,131 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
      */
     meta?: keyof ClientMeta extends never ? Record<string, unknown> : ClientMeta;
 };
+
+/**
+ * Set the CSRF cookie so the SPA can read it and echo it back in headers.
+ */
+export const authCsrfRetrieve = <ThrowOnError extends boolean = false>(options?: Options<AuthCsrfRetrieveData, ThrowOnError>): RequestResult<AuthCsrfRetrieveResponses, unknown, ThrowOnError> => (options?.client ?? client).get<AuthCsrfRetrieveResponses, unknown, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'sessionid',
+            type: 'apiKey'
+        }],
+    url: '/api/auth/csrf/',
+    ...options
+});
+
+/**
+ * Authenticate with username + password and start a session.
+ */
+export const authLoginCreate = <ThrowOnError extends boolean = false>(options: Options<AuthLoginCreateData, ThrowOnError>): RequestResult<AuthLoginCreateResponses, unknown, ThrowOnError> => (options.client ?? client).post<AuthLoginCreateResponses, unknown, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'sessionid',
+            type: 'apiKey'
+        }],
+    url: '/api/auth/login/',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * End the current session.
+ */
+export const authLogoutCreate = <ThrowOnError extends boolean = false>(options?: Options<AuthLogoutCreateData, ThrowOnError>): RequestResult<AuthLogoutCreateResponses, unknown, ThrowOnError> => (options?.client ?? client).post<AuthLogoutCreateResponses, unknown, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'sessionid',
+            type: 'apiKey'
+        }],
+    url: '/api/auth/logout/',
+    ...options
+});
+
+/**
+ * Return the currently authenticated user.
+ */
+export const authMeRetrieve = <ThrowOnError extends boolean = false>(options?: Options<AuthMeRetrieveData, ThrowOnError>): RequestResult<AuthMeRetrieveResponses, unknown, ThrowOnError> => (options?.client ?? client).get<AuthMeRetrieveResponses, unknown, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'sessionid',
+            type: 'apiKey'
+        }],
+    url: '/api/auth/me/',
+    ...options
+});
+
+/**
+ * Change the authenticated user's password (keeps them logged in).
+ */
+export const authPasswordChangeCreate = <ThrowOnError extends boolean = false>(options: Options<AuthPasswordChangeCreateData, ThrowOnError>): RequestResult<AuthPasswordChangeCreateResponses, unknown, ThrowOnError> => (options.client ?? client).post<AuthPasswordChangeCreateResponses, unknown, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'sessionid',
+            type: 'apiKey'
+        }],
+    url: '/api/auth/password/change/',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Email a password-reset link. Always succeeds so we don't leak which
+ * email addresses are registered.
+ */
+export const authPasswordResetCreate = <ThrowOnError extends boolean = false>(options: Options<AuthPasswordResetCreateData, ThrowOnError>): RequestResult<AuthPasswordResetCreateResponses, unknown, ThrowOnError> => (options.client ?? client).post<AuthPasswordResetCreateResponses, unknown, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'sessionid',
+            type: 'apiKey'
+        }],
+    url: '/api/auth/password/reset/',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Set a new password from a valid reset token.
+ */
+export const authPasswordResetConfirmCreate = <ThrowOnError extends boolean = false>(options: Options<AuthPasswordResetConfirmCreateData, ThrowOnError>): RequestResult<AuthPasswordResetConfirmCreateResponses, unknown, ThrowOnError> => (options.client ?? client).post<AuthPasswordResetConfirmCreateResponses, unknown, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'sessionid',
+            type: 'apiKey'
+        }],
+    url: '/api/auth/password/reset/confirm/',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Create a new account and log the user in.
+ */
+export const authRegisterCreate = <ThrowOnError extends boolean = false>(options: Options<AuthRegisterCreateData, ThrowOnError>): RequestResult<AuthRegisterCreateResponses, unknown, ThrowOnError> => (options.client ?? client).post<AuthRegisterCreateResponses, unknown, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'sessionid',
+            type: 'apiKey'
+        }],
+    url: '/api/auth/register/',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
 
 /**
  * Simple health-check endpoint used to verify the API is reachable.

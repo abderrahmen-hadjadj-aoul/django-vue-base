@@ -4,6 +4,13 @@ export type ClientOptions = {
     baseUrl: `${string}://${string}` | (string & {});
 };
 
+/**
+ * A simple `{ "detail": "..." }` response body used across auth endpoints.
+ */
+export type Detail = {
+    detail: string;
+};
+
 export type HealthResponse = {
     status: string;
 };
@@ -15,11 +22,41 @@ export type Item = {
     readonly created_at: string;
 };
 
+/**
+ * Credentials for session login (email + password).
+ */
+export type Login = {
+    email: string;
+};
+
 export type PaginatedItemList = {
     count: number;
     next?: string | null;
     previous?: string | null;
     results: Array<Item>;
+};
+
+/**
+ * Change the password of the currently authenticated user.
+ */
+export type PasswordChange = {
+    old_password: string;
+    new_password: string;
+};
+
+/**
+ * Set a new password using the token emailed to the user.
+ */
+export type PasswordResetConfirm = {
+    uid: string;
+    token: string;
+};
+
+/**
+ * Request a password-reset email for the given address.
+ */
+export type PasswordResetRequest = {
+    email: string;
 };
 
 export type PatchedItem = {
@@ -29,9 +66,47 @@ export type PatchedItem = {
     readonly created_at?: string;
 };
 
+/**
+ * Validates and creates a new user account, keyed by email.
+ */
+export type Register = {
+    readonly id: number;
+    /**
+     * Email address
+     */
+    email: string | string;
+    first_name?: string;
+    last_name?: string;
+};
+
+/**
+ * The public shape of the authenticated user (never exposes the password).
+ *
+ * Credentials are email + password; the email is the account's identity, so
+ * ``username`` is not exposed (it holds a copy of the email internally — see
+ * RegisterSerializer).
+ */
+export type User = {
+    readonly id: number;
+    /**
+     * Email address
+     */
+    readonly email: string;
+    readonly first_name: string;
+    readonly last_name: string;
+};
+
 export type ItemWritable = {
     name: string;
     description?: string;
+};
+
+/**
+ * Credentials for session login (email + password).
+ */
+export type LoginWritable = {
+    email: string;
+    password: string;
 };
 
 export type PaginatedItemListWritable = {
@@ -41,10 +116,136 @@ export type PaginatedItemListWritable = {
     results: Array<ItemWritable>;
 };
 
+/**
+ * Set a new password using the token emailed to the user.
+ */
+export type PasswordResetConfirmWritable = {
+    uid: string;
+    token: string;
+    new_password: string;
+};
+
 export type PatchedItemWritable = {
     name?: string;
     description?: string;
 };
+
+/**
+ * Validates and creates a new user account, keyed by email.
+ */
+export type RegisterWritable = {
+    /**
+     * Email address
+     */
+    email: string | string;
+    password: string;
+    first_name?: string;
+    last_name?: string;
+};
+
+export type AuthCsrfRetrieveData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/auth/csrf/';
+};
+
+export type AuthCsrfRetrieveResponses = {
+    200: Detail;
+};
+
+export type AuthCsrfRetrieveResponse = AuthCsrfRetrieveResponses[keyof AuthCsrfRetrieveResponses];
+
+export type AuthLoginCreateData = {
+    body: LoginWritable;
+    path?: never;
+    query?: never;
+    url: '/api/auth/login/';
+};
+
+export type AuthLoginCreateResponses = {
+    200: User;
+};
+
+export type AuthLoginCreateResponse = AuthLoginCreateResponses[keyof AuthLoginCreateResponses];
+
+export type AuthLogoutCreateData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/auth/logout/';
+};
+
+export type AuthLogoutCreateResponses = {
+    200: Detail;
+};
+
+export type AuthLogoutCreateResponse = AuthLogoutCreateResponses[keyof AuthLogoutCreateResponses];
+
+export type AuthMeRetrieveData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/auth/me/';
+};
+
+export type AuthMeRetrieveResponses = {
+    200: User;
+};
+
+export type AuthMeRetrieveResponse = AuthMeRetrieveResponses[keyof AuthMeRetrieveResponses];
+
+export type AuthPasswordChangeCreateData = {
+    body: PasswordChange;
+    path?: never;
+    query?: never;
+    url: '/api/auth/password/change/';
+};
+
+export type AuthPasswordChangeCreateResponses = {
+    200: Detail;
+};
+
+export type AuthPasswordChangeCreateResponse = AuthPasswordChangeCreateResponses[keyof AuthPasswordChangeCreateResponses];
+
+export type AuthPasswordResetCreateData = {
+    body: PasswordResetRequest;
+    path?: never;
+    query?: never;
+    url: '/api/auth/password/reset/';
+};
+
+export type AuthPasswordResetCreateResponses = {
+    200: Detail;
+};
+
+export type AuthPasswordResetCreateResponse = AuthPasswordResetCreateResponses[keyof AuthPasswordResetCreateResponses];
+
+export type AuthPasswordResetConfirmCreateData = {
+    body: PasswordResetConfirmWritable;
+    path?: never;
+    query?: never;
+    url: '/api/auth/password/reset/confirm/';
+};
+
+export type AuthPasswordResetConfirmCreateResponses = {
+    200: Detail;
+};
+
+export type AuthPasswordResetConfirmCreateResponse = AuthPasswordResetConfirmCreateResponses[keyof AuthPasswordResetConfirmCreateResponses];
+
+export type AuthRegisterCreateData = {
+    body: RegisterWritable;
+    path?: never;
+    query?: never;
+    url: '/api/auth/register/';
+};
+
+export type AuthRegisterCreateResponses = {
+    201: User;
+};
+
+export type AuthRegisterCreateResponse = AuthRegisterCreateResponses[keyof AuthRegisterCreateResponses];
 
 export type HealthRetrieveData = {
     body?: never;
