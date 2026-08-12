@@ -2,6 +2,10 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { useAuth } from '@/stores/auth'
 
 const { register } = useAuth()
@@ -27,33 +31,35 @@ async function submit() {
 </script>
 
 <template>
-  <section class="mx-auto max-w-sm">
-    <h2 class="mb-4 text-2xl font-bold">Create an account</h2>
-    <form class="flex flex-col gap-3" @submit.prevent="submit">
-      <input
-        v-model="email"
-        type="email"
-        class="input"
-        placeholder="Email"
-        autocomplete="email"
-        required
-      />
-      <input
-        v-model="password"
-        type="password"
-        class="input"
-        placeholder="Password"
-        autocomplete="new-password"
-        required
-      />
-      <button type="submit" class="btn" :disabled="busy">
-        {{ busy ? 'Creating…' : 'Sign up' }}
-      </button>
-    </form>
-    <p v-if="error" class="mt-3 text-red-700">{{ error }}</p>
-    <p class="mt-4 text-sm text-slate-600">
-      Already have an account?
-      <RouterLink to="/login" class="text-brand-hover hover:underline">Log in</RouterLink>
-    </p>
-  </section>
+  <Card class="mx-auto max-w-sm">
+    <CardHeader>
+      <CardTitle class="text-2xl">Create an account</CardTitle>
+    </CardHeader>
+    <CardContent>
+      <form class="flex flex-col gap-4" @submit.prevent="submit">
+        <div class="grid gap-2">
+          <Label for="email">Email</Label>
+          <Input id="email" v-model="email" type="email" autocomplete="email" required />
+        </div>
+        <div class="grid gap-2">
+          <Label for="password">Password</Label>
+          <Input
+            id="password"
+            v-model="password"
+            type="password"
+            autocomplete="new-password"
+            required
+          />
+        </div>
+        <Button type="submit" :disabled="busy">{{ busy ? 'Creating…' : 'Sign up' }}</Button>
+      </form>
+      <p v-if="error" class="mt-3 text-sm text-destructive">{{ error }}</p>
+      <p class="mt-4 text-sm text-muted-foreground">
+        Already have an account?
+        <RouterLink to="/login" class="text-foreground underline-offset-4 hover:underline">
+          Log in
+        </RouterLink>
+      </p>
+    </CardContent>
+  </Card>
 </template>

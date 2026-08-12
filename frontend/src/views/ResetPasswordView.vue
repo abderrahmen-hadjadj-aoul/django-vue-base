@@ -2,6 +2,10 @@
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { useAuth } from '@/stores/auth'
 
 const { confirmPasswordReset } = useAuth()
@@ -32,31 +36,40 @@ async function submit() {
 </script>
 
 <template>
-  <section class="mx-auto max-w-sm">
-    <h2 class="mb-4 text-2xl font-bold">Choose a new password</h2>
-    <p v-if="!uid || !token" class="text-red-700">
-      This reset link is missing its token. Request a new one from
-      <RouterLink to="/forgot-password" class="text-brand-hover hover:underline">
-        Forgot password </RouterLink
-      >.
-    </p>
-    <form v-else class="flex flex-col gap-3" @submit.prevent="submit">
-      <input
-        v-model="password"
-        type="password"
-        class="input"
-        placeholder="New password"
-        autocomplete="new-password"
-        required
-      />
-      <button type="submit" class="btn" :disabled="busy">
-        {{ busy ? 'Saving…' : 'Set password' }}
-      </button>
-    </form>
-    <p v-if="message" class="mt-3 text-green-700">
-      {{ message }}
-      <RouterLink to="/login" class="text-brand-hover hover:underline">Log in</RouterLink>
-    </p>
-    <p v-if="error" class="mt-3 text-red-700">{{ error }}</p>
-  </section>
+  <Card class="mx-auto max-w-sm">
+    <CardHeader>
+      <CardTitle class="text-2xl">Choose a new password</CardTitle>
+    </CardHeader>
+    <CardContent>
+      <p v-if="!uid || !token" class="text-sm text-destructive">
+        This reset link is missing its token. Request a new one from
+        <RouterLink
+          to="/forgot-password"
+          class="text-foreground underline-offset-4 hover:underline"
+        >
+          Forgot password </RouterLink
+        >.
+      </p>
+      <form v-else class="flex flex-col gap-4" @submit.prevent="submit">
+        <div class="grid gap-2">
+          <Label for="password">New password</Label>
+          <Input
+            id="password"
+            v-model="password"
+            type="password"
+            autocomplete="new-password"
+            required
+          />
+        </div>
+        <Button type="submit" :disabled="busy">{{ busy ? 'Saving…' : 'Set password' }}</Button>
+      </form>
+      <p v-if="message" class="mt-3 text-sm text-primary">
+        {{ message }}
+        <RouterLink to="/login" class="text-foreground underline-offset-4 hover:underline">
+          Log in
+        </RouterLink>
+      </p>
+      <p v-if="error" class="mt-3 text-sm text-destructive">{{ error }}</p>
+    </CardContent>
+  </Card>
 </template>

@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { useAuth } from '@/stores/auth'
 
 const { user, changePassword } = useAuth()
@@ -28,35 +32,41 @@ async function submit() {
 </script>
 
 <template>
-  <section class="mx-auto max-w-sm">
-    <h2 class="mb-4 text-2xl font-bold">Account</h2>
-    <p class="text-slate-500">
-      Signed in as <strong class="text-slate-900">{{ user?.email }}</strong>
-    </p>
+  <Card class="mx-auto max-w-sm">
+    <CardHeader>
+      <CardTitle class="text-2xl">Account</CardTitle>
+    </CardHeader>
+    <CardContent>
+      <p class="text-sm text-muted-foreground">
+        Signed in as <strong class="text-foreground">{{ user?.email }}</strong>
+      </p>
 
-    <h3 class="mt-6 mb-3 text-lg font-semibold">Change password</h3>
-    <form class="flex flex-col gap-3" @submit.prevent="submit">
-      <input
-        v-model="oldPassword"
-        type="password"
-        class="input"
-        placeholder="Current password"
-        autocomplete="current-password"
-        required
-      />
-      <input
-        v-model="newPassword"
-        type="password"
-        class="input"
-        placeholder="New password"
-        autocomplete="new-password"
-        required
-      />
-      <button type="submit" class="btn" :disabled="busy">
-        {{ busy ? 'Saving…' : 'Update password' }}
-      </button>
-    </form>
-    <p v-if="message" class="mt-3 text-green-700">{{ message }}</p>
-    <p v-if="error" class="mt-3 text-red-700">{{ error }}</p>
-  </section>
+      <h3 class="mt-6 mb-3 text-lg font-semibold">Change password</h3>
+      <form class="flex flex-col gap-4" @submit.prevent="submit">
+        <div class="grid gap-2">
+          <Label for="old-password">Current password</Label>
+          <Input
+            id="old-password"
+            v-model="oldPassword"
+            type="password"
+            autocomplete="current-password"
+            required
+          />
+        </div>
+        <div class="grid gap-2">
+          <Label for="new-password">New password</Label>
+          <Input
+            id="new-password"
+            v-model="newPassword"
+            type="password"
+            autocomplete="new-password"
+            required
+          />
+        </div>
+        <Button type="submit" :disabled="busy">{{ busy ? 'Saving…' : 'Update password' }}</Button>
+      </form>
+      <p v-if="message" class="mt-3 text-sm text-primary">{{ message }}</p>
+      <p v-if="error" class="mt-3 text-sm text-destructive">{{ error }}</p>
+    </CardContent>
+  </Card>
 </template>

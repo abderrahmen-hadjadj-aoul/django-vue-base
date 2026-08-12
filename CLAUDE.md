@@ -13,7 +13,8 @@ features that a consumer of the template wouldn't want.
 - **Backend**: Django 5.2, Django REST Framework, drf-spectacular (OpenAPI),
   django-cors-headers, django-environ. SQLite by default (`DATABASE_URL` for
   anything else).
-- **Frontend**: Vue 3 + Vite 7 + **TypeScript**, styled with **Tailwind CSS v4**.
+- **Frontend**: Vue 3 + Vite 7 + **TypeScript**, styled with **shadcn-vue**
+  (Reka UI components) on **Tailwind CSS v4**.
 - **API client**: a typed SDK generated from the backend's OpenAPI schema by
   `@hey-api/openapi-ts` (see below).
 - **Package manager**: **pnpm only — never use npm/yarn.**
@@ -24,10 +25,13 @@ features that a consumer of the template wouldn't want.
 backend/    Django project: config/ (settings, urls), api/ (example app),
             accounts/ (session-cookie auth: /api/auth/…)
             openapi.json  <- exported schema, committed
-frontend/   Vue 3 + Vite + TS + Tailwind CSS v4
+frontend/   Vue 3 + Vite + TS + shadcn-vue (Reka UI) + Tailwind CSS v4
             src/api/generated/  <- generated SDK, committed, DO NOT hand-edit
             src/api/index.ts    <- client config: base URL, credentials, CSRF interceptor
-            src/assets/main.css <- Tailwind entry: @import + @theme tokens + shared classes
+            src/components/ui/   <- shadcn-vue components (owned, editable): button, input, card, label
+            src/lib/utils.ts     <- cn() class-merge helper (clsx + tailwind-merge)
+            components.json      <- shadcn-vue CLI config (for `add`)
+            src/assets/main.css <- Tailwind entry + shadcn design tokens (:root/.dark, @theme inline)
             src/stores/auth.ts  <- reactive auth store (useAuth)
             src/router/         <- vue-router + auth route guard
             src/views/          <- HomeView (protected) + auth pages
@@ -112,23 +116,29 @@ accurate.
 - Frontend is strict TypeScript. Configure the API base URL only in
   `src/api/index.ts` (via `VITE_API_BASE_URL`, empty in dev so the proxy works).
 
-## Styling (Tailwind CSS v4)
+## Styling (shadcn-vue + Tailwind CSS v4)
 
-- **Tailwind v4 is configured entirely in CSS — there is no `tailwind.config.js`
-  and no PostCSS/`content` globbing.** The `@tailwindcss/vite` plugin
-  (`vite.config.ts`) auto-detects template classes. `src/assets/main.css` is the
-  single entry: `@import 'tailwindcss'`, a `@theme` block for design tokens, and
-  a small `@layer components` for shared primitives.
-- **Style with utility classes in templates.** Components carry no `<style>`
-  blocks; keep it that way. Layout/spacing/color all live in the `class`
-  attribute.
-- **Brand color is a theme token.** `@theme { --color-brand: … }` in `main.css`
-  generates `bg-brand`, `text-brand`, `border-brand`, `ring-brand`, etc. To
-  rebrand, change that one token — don't hard-code hex values in templates.
-- **Two shared classes** live in `main.css`'s `@layer components`: `.input` and
-  `.btn`, built with `@apply` so the six auth forms stay DRY. Add a component
-  class here only when a pattern genuinely repeats; otherwise prefer raw
-  utilities.
+- **UI components are shadcn-vue** — copy-in components (MIT) built on **Reka UI**
+  and Tailwind. They live in `src/components/ui/` (`button`, `input`, `card`,
+  `label`) and are **owned by this repo**, not `node_modules`: edit them freely.
+  Import via `@/components/ui/button`, etc. Every component uses `cn()` from
+  `@/lib/utils` to merge classes, so callers can pass a `class` prop.
+- **Why not PrimeVue:** we evaluated it and backed out — **PrimeVue v5 ships a
+  license check** that renders an "Invalid PrimeUI License" banner (v4 was MIT).
+  shadcn-vue has no runtime library and no license.
+- **Add components with the CLI:** `pnpm dlx shadcn-vue@latest add <name>`.
+  Config lives in `components.json` (style `new-york`, base color `neutral`, CSS
+  variables on). Don't reintroduce `primevue`/`@primeuix/*`.
+- **Tailwind v4 is configured entirely in CSS — no `tailwind.config.js`, no
+  PostCSS.** The `@tailwindcss/vite` plugin auto-detects classes.
+  `src/assets/main.css` is the single entry: `@import 'tailwindcss'`, the shadcn
+  design tokens as CSS variables under `:root` / `.dark`, and an `@theme inline`
+  block mapping them to utilities (`bg-primary`, `text-muted-foreground`, …).
+- **Rebrand by editing the oklch token values** in `:root` / `.dark` (e.g.
+  `--primary`), not by hard-coding colors in templates. Dark mode is a `.dark`
+  class on a root element (`@custom-variant dark`).
+- **Style with utility classes in views.** View components carry no `<style>`
+  blocks; keep it that way. `tw-animate-css` is imported for animation utilities.
 - No build step to remember — Tailwind compiles through Vite for both `pnpm dev`
   and `pnpm build`.
 
