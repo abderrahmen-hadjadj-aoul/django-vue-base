@@ -54,11 +54,19 @@ Frontend (from `frontend/`):
 ```bash
 pnpm install
 pnpm dev            # :5173, proxies /api -> :8000
-pnpm build          # runs vue-tsc type-check, then vite build
-pnpm type-check
+pnpm build          # vite build only (no type-check — see below)
+pnpm type-check     # vue-tsc --noEmit; run this regularly, see below
 ```
 
-Run both at once from the project root: `mprocs`.
+Run both at once from the project root: `mprocs`. `mprocs` also runs a
+`frontend-typecheck` proc (`pnpm type-check`) alongside the dev servers.
+
+**Run `pnpm type-check` regularly to verify your work is correct.** The
+production `pnpm build` no longer runs `vue-tsc` (type-checking was removed from
+the live build so builds are fast and don't fail on type errors). That means
+type errors won't surface at build time — so run `pnpm type-check` (from
+`frontend/`) after changing any TypeScript/Vue code, and rely on the
+`frontend-typecheck` proc in `mprocs` during development.
 
 ## The typed API client (important)
 

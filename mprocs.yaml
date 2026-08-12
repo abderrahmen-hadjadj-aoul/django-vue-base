@@ -7,3 +7,6 @@ procs:
   frontend:
     shell: "pnpm dev"
     cwd: frontend
+  frontend-typecheck:
+    shell: "pnpm type-check"
+    cwd: frontend
