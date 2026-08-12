@@ -28,17 +28,18 @@ async function submit() {
 </script>
 
 <template>
-  <section class="auth">
-    <h2>Account</h2>
-    <p class="status">
-      Signed in as <strong>{{ user?.email }}</strong>
+  <section class="mx-auto max-w-sm">
+    <h2 class="mb-4 text-2xl font-bold">Account</h2>
+    <p class="text-slate-500">
+      Signed in as <strong class="text-slate-900">{{ user?.email }}</strong>
     </p>
 
-    <h3>Change password</h3>
-    <form @submit.prevent="submit">
+    <h3 class="mt-6 mb-3 text-lg font-semibold">Change password</h3>
+    <form class="flex flex-col gap-3" @submit.prevent="submit">
       <input
         v-model="oldPassword"
         type="password"
+        class="input"
         placeholder="Current password"
         autocomplete="current-password"
         required
@@ -46,13 +47,16 @@ async function submit() {
       <input
         v-model="newPassword"
         type="password"
+        class="input"
         placeholder="New password"
         autocomplete="new-password"
         required
       />
-      <button type="submit" :disabled="busy">{{ busy ? 'Saving…' : 'Update password' }}</button>
+      <button type="submit" class="btn" :disabled="busy">
+        {{ busy ? 'Saving…' : 'Update password' }}
+      </button>
     </form>
-    <p v-if="message" class="success">{{ message }}</p>
-    <p v-if="error" class="error">{{ error }}</p>
+    <p v-if="message" class="mt-3 text-green-700">{{ message }}</p>
+    <p v-if="error" class="mt-3 text-red-700">{{ error }}</p>
   </section>
 </template>

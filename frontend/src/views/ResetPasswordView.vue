@@ -32,25 +32,31 @@ async function submit() {
 </script>
 
 <template>
-  <section class="auth">
-    <h2>Choose a new password</h2>
-    <p v-if="!uid || !token" class="error">
+  <section class="mx-auto max-w-sm">
+    <h2 class="mb-4 text-2xl font-bold">Choose a new password</h2>
+    <p v-if="!uid || !token" class="text-red-700">
       This reset link is missing its token. Request a new one from
-      <RouterLink to="/forgot-password">Forgot password</RouterLink>.
+      <RouterLink to="/forgot-password" class="text-brand-hover hover:underline">
+        Forgot password </RouterLink
+      >.
     </p>
-    <form v-else @submit.prevent="submit">
+    <form v-else class="flex flex-col gap-3" @submit.prevent="submit">
       <input
         v-model="password"
         type="password"
+        class="input"
         placeholder="New password"
         autocomplete="new-password"
         required
       />
-      <button type="submit" :disabled="busy">{{ busy ? 'Saving…' : 'Set password' }}</button>
+      <button type="submit" class="btn" :disabled="busy">
+        {{ busy ? 'Saving…' : 'Set password' }}
+      </button>
     </form>
-    <p v-if="message" class="success">
-      {{ message }} <RouterLink to="/login">Log in</RouterLink>
+    <p v-if="message" class="mt-3 text-green-700">
+      {{ message }}
+      <RouterLink to="/login" class="text-brand-hover hover:underline">Log in</RouterLink>
     </p>
-    <p v-if="error" class="error">{{ error }}</p>
+    <p v-if="error" class="mt-3 text-red-700">{{ error }}</p>
   </section>
 </template>

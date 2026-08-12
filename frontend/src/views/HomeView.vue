@@ -44,24 +44,28 @@ onMounted(async () => {
 
 <template>
   <section>
-    <p class="status">
+    <p class="text-slate-500">
       Backend health:
-      <span :class="['badge', health === 'ok' ? 'ok' : 'bad']">{{ health }}</span>
+      <span
+        class="ml-1 rounded-full px-2 py-0.5 text-sm font-semibold"
+        :class="health === 'ok' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'"
+        >{{ health }}</span
+      >
     </p>
 
-    <h2>Items</h2>
-    <form @submit.prevent="addItem">
-      <input v-model="name" placeholder="Name" required />
-      <input v-model="description" placeholder="Description (optional)" />
-      <button type="submit">Add</button>
+    <h2 class="mt-6 mb-1 text-xl font-bold">Items</h2>
+    <form class="my-4 flex flex-wrap gap-2" @submit.prevent="addItem">
+      <input v-model="name" class="input flex-1" placeholder="Name" required />
+      <input v-model="description" class="input flex-1" placeholder="Description (optional)" />
+      <button type="submit" class="btn">Add</button>
     </form>
-    <p v-if="error" class="error">{{ error }}</p>
-    <ul>
-      <li v-for="item in items" :key="item.id">
+    <p v-if="error" class="text-red-700">{{ error }}</p>
+    <ul class="mt-2">
+      <li v-for="item in items" :key="item.id" class="border-b border-slate-200 py-2">
         <strong>{{ item.name }}</strong>
-        <span v-if="item.description"> — {{ item.description }}</span>
+        <span v-if="item.description" class="text-slate-500"> — {{ item.description }}</span>
       </li>
-      <li v-if="items.length === 0" class="empty">No items yet.</li>
+      <li v-if="items.length === 0" class="py-2 text-slate-400">No items yet.</li>
     </ul>
   </section>
 </template>

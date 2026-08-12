@@ -9,7 +9,7 @@ plumbing.
 | Layer     | Tech                                                     |
 | --------- | -------------------------------------------------------- |
 | Backend   | Django 5.2, Django REST Framework, drf-spectacular, django-cors-headers, django-environ |
-| Frontend  | Vue 3, Vite 7, **TypeScript**                            |
+| Frontend  | Vue 3, Vite 7, **TypeScript**, Tailwind CSS v4           |
 | API client | Typed SDK generated from the OpenAPI schema by [@hey-api/openapi-ts](https://heyapi.dev) |
 | Package manager (frontend) | **pnpm** (do not use npm)              |
 | Database  | SQLite by default, any `DATABASE_URL` supported          |
@@ -28,10 +28,11 @@ django-vue-base/
     │   ├── api/
     │   │   ├── generated/  # typed SDK generated from the schema (do not edit)
     │   │   └── index.ts    # configures the client base URL, re-exports the SDK
+    │   ├── assets/main.css # Tailwind entry: @import + @theme tokens + shared classes
     │   ├── App.vue         # demo: health status + item list/create
     │   └── main.ts
     ├── openapi-ts.config.ts  # @hey-api generator config
-    └── vite.config.ts        # proxies /api -> Django during dev
+    └── vite.config.ts        # Tailwind + Vue plugins; proxies /api -> Django in dev
 ```
 
 ## Backend setup
@@ -73,6 +74,35 @@ pnpm preview
 
 Set `VITE_API_BASE_URL` at build time if the API is served from a different
 origin in production.
+
+## Styling (Tailwind CSS v4)
+
+The frontend is styled with **Tailwind CSS v4**, wired in through the
+`@tailwindcss/vite` plugin — so it compiles automatically during `pnpm dev` and
+`pnpm build` with no extra step. Tailwind v4 is configured **entirely in CSS**:
+there is no `tailwind.config.js` and no PostCSS setup.
+
+Everything lives in `frontend/src/assets/main.css`:
+
+```css
+@import 'tailwindcss';
+
+@theme {
+  --color-brand: #42b883; /* → bg-brand, text-brand, border-brand, … */
+}
+
+@layer components {
+  .input { @apply w-full rounded-md border … ; }  /* shared form primitives */
+  .btn   { @apply … ; }
+}
+```
+
+- **Style components with utility classes** directly in the templates — there are
+  no `<style>` blocks.
+- **Rebrand by editing the `@theme` token** (`--color-brand`), not by hard-coding
+  hex values; it regenerates the `*-brand` utilities everywhere.
+- Add a class to `@layer components` only when a pattern genuinely repeats
+  (as `.input`/`.btn` do for the auth forms); otherwise prefer raw utilities.
 
 ## Typed API client
 

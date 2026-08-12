@@ -29,24 +29,38 @@ async function submit() {
 </script>
 
 <template>
-  <section class="auth">
-    <h2>Log in</h2>
-    <form @submit.prevent="submit">
-      <input v-model="email" type="email" placeholder="Email" autocomplete="email" required />
+  <section class="mx-auto max-w-sm">
+    <h2 class="mb-4 text-2xl font-bold">Log in</h2>
+    <form class="flex flex-col gap-3" @submit.prevent="submit">
+      <input
+        v-model="email"
+        type="email"
+        class="input"
+        placeholder="Email"
+        autocomplete="email"
+        required
+      />
       <input
         v-model="password"
         type="password"
+        class="input"
         placeholder="Password"
         autocomplete="current-password"
         required
       />
-      <button type="submit" :disabled="busy">{{ busy ? 'Logging in…' : 'Log in' }}</button>
+      <button type="submit" class="btn" :disabled="busy">
+        {{ busy ? 'Logging in…' : 'Log in' }}
+      </button>
     </form>
-    <p v-if="error" class="error">{{ error }}</p>
-    <p class="links">
-      <RouterLink to="/register">Create an account</RouterLink>
+    <p v-if="error" class="mt-3 text-red-700">{{ error }}</p>
+    <p class="mt-4 text-sm text-slate-600">
+      <RouterLink to="/register" class="text-brand-hover hover:underline">
+        Create an account
+      </RouterLink>
       ·
-      <RouterLink to="/forgot-password">Forgot password?</RouterLink>
+      <RouterLink to="/forgot-password" class="text-brand-hover hover:underline">
+        Forgot password?
+      </RouterLink>
     </p>
   </section>
 </template>
