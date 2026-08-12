@@ -10,3 +10,18 @@ procs:
   frontend-typecheck:
     shell: "pnpm type-check"
     cwd: frontend
+  # E2E (Gherkin via playwright-bdd, real backend). Not started automatically —
+  # select the proc in the mprocs UI and press `s` (start) to run on demand.
+  # These spin up their OWN dedicated servers (frontend :5273 → backend :8001 on
+  # a throwaway SQLite DB), so they're independent of the dev procs above.
+  e2e:
+    shell: "pnpm test:e2e"
+    cwd: frontend
+    autostart: false
+  e2e-ui:
+    # Opens Playwright UI mode (watch, time-travel, pick locators, re-run) —
+    # https://playwright.dev/docs/test-ui-mode. Works because playwright-bdd runs
+    # the Gherkin specs through the @playwright/test runner.
+    shell: "pnpm test:e2e:ui"
+    cwd: frontend
+    autostart: false

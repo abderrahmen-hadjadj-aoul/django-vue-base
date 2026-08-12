@@ -21,6 +21,10 @@ env = environ.Env(
     DEFAULT_FROM_EMAIL=(str, "webmaster@localhost"),
     SESSION_COOKIE_SECURE=(bool, False),
     CSRF_COOKIE_SECURE=(bool, False),
+    # Enables the /api/test/ support endpoints used by the Playwright e2e suite.
+    # NEVER set this to True in production — the endpoints reset the DB and log in
+    # as arbitrary users without authentication. See api/e2e_views.py.
+    E2E_MODE=(bool, False),
 )
 
 # Read a .env file if present (never commit real secrets).
@@ -32,6 +36,10 @@ SECRET_KEY = env(
 )
 
 DEBUG = env("DEBUG")
+
+# Test-support endpoints (api/test/…) are wired up in config/urls.py only when
+# this is on. Driven by the Playwright e2e run; must stay False in production.
+E2E_MODE = env("E2E_MODE")
 
 ALLOWED_HOSTS = env("ALLOWED_HOSTS")
 

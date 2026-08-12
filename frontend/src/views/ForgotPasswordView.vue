@@ -35,17 +35,34 @@ async function submit() {
       <CardDescription>Enter your email and we'll send you a reset link.</CardDescription>
     </CardHeader>
     <CardContent>
-      <form class="flex flex-col gap-4" @submit.prevent="submit">
+      <form class="flex flex-col gap-4" data-testid="forgot-form" @submit.prevent="submit">
         <div class="grid gap-2">
           <Label for="email">Email</Label>
-          <Input id="email" v-model="email" type="email" autocomplete="email" required />
+          <Input
+            id="email"
+            v-model="email"
+            type="email"
+            autocomplete="email"
+            required
+            data-testid="forgot-email"
+          />
         </div>
-        <Button type="submit" :disabled="busy">{{ busy ? 'Sending…' : 'Send link' }}</Button>
+        <Button type="submit" :disabled="busy" data-testid="forgot-submit">
+          {{ busy ? 'Sending…' : 'Send link' }}
+        </Button>
       </form>
-      <p v-if="message" class="mt-3 text-sm text-primary">{{ message }}</p>
-      <p v-if="error" class="mt-3 text-sm text-destructive">{{ error }}</p>
+      <p v-if="message" class="mt-3 text-sm text-primary" data-testid="forgot-message">
+        {{ message }}
+      </p>
+      <p v-if="error" class="mt-3 text-sm text-destructive" data-testid="forgot-error">
+        {{ error }}
+      </p>
       <p class="mt-4 text-sm text-muted-foreground">
-        <RouterLink to="/login" class="text-foreground underline-offset-4 hover:underline">
+        <RouterLink
+          to="/login"
+          class="text-foreground underline-offset-4 hover:underline"
+          data-testid="forgot-login-link"
+        >
           Back to log in
         </RouterLink>
       </p>

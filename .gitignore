@@ -15,6 +15,13 @@ frontend/dist/
 frontend/.vite/
 *.tsbuildinfo
 
+# E2E test artifacts (playwright-bdd generated specs + Playwright output)
+frontend/.features-gen/
+frontend/test-results/
+frontend/playwright-report/
+frontend/blob-report/
+frontend/.last-run.json
+
 # The OpenAPI schema (backend/openapi.json) and the generated client
 # (frontend/src/api/generated) are committed on purpose — regenerate with
 # `pnpm generate:api`.

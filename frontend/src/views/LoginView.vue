@@ -38,10 +38,17 @@ async function submit() {
       <CardTitle class="text-2xl">Log in</CardTitle>
     </CardHeader>
     <CardContent>
-      <form class="flex flex-col gap-4" @submit.prevent="submit">
+      <form class="flex flex-col gap-4" data-testid="login-form" @submit.prevent="submit">
         <div class="grid gap-2">
           <Label for="email">Email</Label>
-          <Input id="email" v-model="email" type="email" autocomplete="email" required />
+          <Input
+            id="email"
+            v-model="email"
+            type="email"
+            autocomplete="email"
+            required
+            data-testid="login-email"
+          />
         </div>
         <div class="grid gap-2">
           <Label for="password">Password</Label>
@@ -51,19 +58,29 @@ async function submit() {
             type="password"
             autocomplete="current-password"
             required
+            data-testid="login-password"
           />
         </div>
-        <Button type="submit" :disabled="busy">{{ busy ? 'Logging in…' : 'Log in' }}</Button>
+        <Button type="submit" :disabled="busy" data-testid="login-submit">
+          {{ busy ? 'Logging in…' : 'Log in' }}
+        </Button>
       </form>
-      <p v-if="error" class="mt-3 text-sm text-destructive">{{ error }}</p>
+      <p v-if="error" class="mt-3 text-sm text-destructive" data-testid="login-error">
+        {{ error }}
+      </p>
       <p class="mt-4 text-sm text-muted-foreground">
-        <RouterLink to="/register" class="text-foreground underline-offset-4 hover:underline">
+        <RouterLink
+          to="/register"
+          class="text-foreground underline-offset-4 hover:underline"
+          data-testid="login-register-link"
+        >
           Create an account
         </RouterLink>
         ·
         <RouterLink
           to="/forgot-password"
           class="text-foreground underline-offset-4 hover:underline"
+          data-testid="login-forgot-link"
         >
           Forgot password?
         </RouterLink>

@@ -87,6 +87,68 @@ New DRF endpoints should produce a clean schema. For non-serializer responses
 (like the `health` view), add `@extend_schema(...)` so the generated types stay
 accurate.
 
+## Frontend E2E tests (Gherkin via playwright-bdd)
+
+BDD-style browser tests live in `frontend/tests/`. Specs are Gherkin, but they
+run through the **`@playwright/test` runner** via **`playwright-bdd`** (which
+generates Playwright spec files from the `.feature` files). That's what gives us
+Playwright **UI mode**, the trace viewer, parallel workers, etc. — plain
+`@cucumber/cucumber` can't do those.
+
+```
+frontend/tests/features/     Gherkin .feature specs (login, register, home, …)
+frontend/tests/steps/        step defs — createBdd() Given/When/Then, getByTestId-based
+frontend/tests/fixtures.ts   playwright-bdd test + `resetState` fixture (auto, resets DB)
+frontend/tests/support/backend.ts  helpers hitting the /api/test/ support endpoints
+frontend/playwright.config.ts      defineBddConfig + the two webServers
+frontend/.features-gen/      generated specs (git-ignored) — never edit
+backend/api/e2e_views.py     the /api/test/ endpoints (gated behind E2E_MODE)
+```
+
+- Run: `pnpm test:e2e` (`bddgen && playwright test`, headless). Debug/iterate with
+  `pnpm test:e2e:ui` → **Playwright UI mode**
+  (https://playwright.dev/docs/test-ui-mode: watch, time-travel, pick locators).
+  `pnpm test:e2e:report` opens the last HTML report. `mprocs` exposes `e2e` and
+  `e2e-ui` as `autostart: false` procs you start on demand.
+- **These tests hit the REAL Django API + DB — nothing is mocked.** Playwright's
+  `webServer` starts two dedicated servers just for e2e, isolated from the dev
+  stack: a Django backend on **:8001** against a throwaway **`backend/db.e2e.sqlite3`**
+  (recreated + migrated each run) with `E2E_MODE=True`, and a Vite frontend on
+  **:5273** that proxies `/api` → :8001 (via `VITE_API_PROXY_TARGET`). `baseURL`
+  is `http://localhost:5273`.
+- **Test-support endpoints** live in `backend/api/e2e_views.py` under `/api/test/`
+  and are mounted **only when `E2E_MODE=True`** (see `config/urls.py`) — they never
+  exist in a normal deployment. They reset the DB and seed users/items/sessions/
+  reset-tokens for the harness. They set `authentication_classes = []` so DRF's
+  `SessionAuthentication` doesn't CSRF-reject them once a session cookie exists.
+  **Never set `E2E_MODE=True` in production** (unauthenticated + destructive).
+- **Isolation:** real backend + one shared DB ⇒ `workers: 1` (serial) and the
+  `resetState` fixture (`auto: true` in `tests/fixtures.ts`) wipes the DB before
+  every scenario. Step preconditions call the support endpoints via
+  `tests/support/backend.ts`: `seedUser` ("a registered user…"), `loginAs`
+  ("I am logged in as…", sets the session cookie through `page.request`), `seedItem`,
+  `passwordResetLink` (mints a real uid+token). `E2E_PASSWORD` there must match
+  `DEFAULT_PASSWORD` in `e2e_views.py`.
+- The e2e backend uses the **dummy email backend** (set in `playwright.config.ts`):
+  the reset flow's first real email send otherwise blocks ~5s on `socket.getfqdn()`
+  and races step timeouts. Tests read reset tokens via the support endpoint, not email.
+- **Address DOM nodes by `data-testid`** (Playwright `getByTestId`), not text or
+  CSS. Views carry testids for anything a test touches; add one when you add
+  interactive markup. shadcn `Input`/`Button` forward `data-testid` (fallthrough
+  attrs) to their root element.
+- Steps read fixtures by destructuring: `Given('…', async ({ page }) => …)`.
+  `createBdd()` must be built on `test` imported from **playwright-bdd** (extended
+  in `tests/fixtures.ts`), not `@playwright/test`. Step fns must declare the
+  fixtures arg first even if unused (playwright-bdd arity check).
+- **Gotcha — Vite watcher vs generated/report files.** `bddgen` writes
+  `.features-gen/` and Playwright writes `playwright-report/` / `test-results/`
+  while the Vite server runs; if its watcher sees those writes it full-reloads the
+  app mid-scenario and wipes state. `vite.config.ts` ignores all three in
+  `server.watch.ignored`, and they're git-ignored.
+- Browsers: `pnpm exec playwright install chromium` once after install. These
+  endpoints don't appear in `openapi.json` (schema is generated with `E2E_MODE`
+  off), so no client regeneration is needed for them.
+
 ## Authentication (session cookies)
 
 - Auth lives in the `accounts` app under `/api/auth/…` (register, login, logout,

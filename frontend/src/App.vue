@@ -15,14 +15,32 @@ async function onLogout() {
 
 <template>
   <header class="flex items-center justify-between gap-4 border-b bg-card px-6 py-3">
-    <RouterLink to="/" class="font-bold text-foreground">Django + Vue Base</RouterLink>
-    <nav v-if="isAuthenticated" class="flex items-center gap-4">
-      <RouterLink to="/" class="text-sm text-muted-foreground hover:text-foreground">Home</RouterLink>
-      <RouterLink to="/account" class="text-sm text-muted-foreground hover:text-foreground">
+    <RouterLink to="/" class="font-bold text-foreground" data-testid="brand">Django + Vue Base</RouterLink>
+    <nav v-if="isAuthenticated" class="flex items-center gap-4" data-testid="main-nav">
+      <RouterLink
+        to="/"
+        class="text-sm text-muted-foreground hover:text-foreground"
+        data-testid="nav-home"
+        >Home</RouterLink
+      >
+      <RouterLink
+        to="/account"
+        class="text-sm text-muted-foreground hover:text-foreground"
+        data-testid="nav-account"
+      >
         Account
       </RouterLink>
-      <span class="text-sm text-muted-foreground">{{ user?.email }}</span>
-      <Button variant="ghost" size="sm" class="text-destructive" @click="onLogout">Log out</Button>
+      <span class="text-sm text-muted-foreground" data-testid="nav-user-email">{{
+        user?.email
+      }}</span>
+      <Button
+        variant="ghost"
+        size="sm"
+        class="text-destructive"
+        data-testid="logout-button"
+        @click="onLogout"
+        >Log out</Button
+      >
     </nav>
   </header>
 

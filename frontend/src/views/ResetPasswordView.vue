@@ -41,7 +41,7 @@ async function submit() {
       <CardTitle class="text-2xl">Choose a new password</CardTitle>
     </CardHeader>
     <CardContent>
-      <p v-if="!uid || !token" class="text-sm text-destructive">
+      <p v-if="!uid || !token" class="text-sm text-destructive" data-testid="reset-missing-token">
         This reset link is missing its token. Request a new one from
         <RouterLink
           to="/forgot-password"
@@ -50,7 +50,7 @@ async function submit() {
           Forgot password </RouterLink
         >.
       </p>
-      <form v-else class="flex flex-col gap-4" @submit.prevent="submit">
+      <form v-else class="flex flex-col gap-4" data-testid="reset-form" @submit.prevent="submit">
         <div class="grid gap-2">
           <Label for="password">New password</Label>
           <Input
@@ -59,17 +59,22 @@ async function submit() {
             type="password"
             autocomplete="new-password"
             required
+            data-testid="reset-password"
           />
         </div>
-        <Button type="submit" :disabled="busy">{{ busy ? 'Saving…' : 'Set password' }}</Button>
+        <Button type="submit" :disabled="busy" data-testid="reset-submit">
+          {{ busy ? 'Saving…' : 'Set password' }}
+        </Button>
       </form>
-      <p v-if="message" class="mt-3 text-sm text-primary">
+      <p v-if="message" class="mt-3 text-sm text-primary" data-testid="reset-message">
         {{ message }}
         <RouterLink to="/login" class="text-foreground underline-offset-4 hover:underline">
           Log in
         </RouterLink>
       </p>
-      <p v-if="error" class="mt-3 text-sm text-destructive">{{ error }}</p>
+      <p v-if="error" class="mt-3 text-sm text-destructive" data-testid="reset-error">
+        {{ error }}
+      </p>
     </CardContent>
   </Card>
 </template>

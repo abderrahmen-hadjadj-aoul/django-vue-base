@@ -38,11 +38,12 @@ async function submit() {
     </CardHeader>
     <CardContent>
       <p class="text-sm text-muted-foreground">
-        Signed in as <strong class="text-foreground">{{ user?.email }}</strong>
+        Signed in as
+        <strong class="text-foreground" data-testid="account-email">{{ user?.email }}</strong>
       </p>
 
       <h3 class="mt-6 mb-3 text-lg font-semibold">Change password</h3>
-      <form class="flex flex-col gap-4" @submit.prevent="submit">
+      <form class="flex flex-col gap-4" data-testid="password-form" @submit.prevent="submit">
         <div class="grid gap-2">
           <Label for="old-password">Current password</Label>
           <Input
@@ -51,6 +52,7 @@ async function submit() {
             type="password"
             autocomplete="current-password"
             required
+            data-testid="account-old-password"
           />
         </div>
         <div class="grid gap-2">
@@ -61,12 +63,19 @@ async function submit() {
             type="password"
             autocomplete="new-password"
             required
+            data-testid="account-new-password"
           />
         </div>
-        <Button type="submit" :disabled="busy">{{ busy ? 'Saving…' : 'Update password' }}</Button>
+        <Button type="submit" :disabled="busy" data-testid="account-submit">
+          {{ busy ? 'Saving…' : 'Update password' }}
+        </Button>
       </form>
-      <p v-if="message" class="mt-3 text-sm text-primary">{{ message }}</p>
-      <p v-if="error" class="mt-3 text-sm text-destructive">{{ error }}</p>
+      <p v-if="message" class="mt-3 text-sm text-primary" data-testid="account-message">
+        {{ message }}
+      </p>
+      <p v-if="error" class="mt-3 text-sm text-destructive" data-testid="account-error">
+        {{ error }}
+      </p>
     </CardContent>
   </Card>
 </template>

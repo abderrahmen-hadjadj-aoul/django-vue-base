@@ -55,23 +55,31 @@ onMounted(async () => {
             ? 'bg-primary/10 text-primary'
             : 'bg-destructive/10 text-destructive'
         "
+        data-testid="health-status"
         >{{ health }}</span
       >
     </p>
 
     <h2 class="mt-6 mb-1 text-xl font-bold">Items</h2>
-    <form class="my-4 flex flex-wrap gap-2" @submit.prevent="addItem">
-      <Input v-model="name" class="flex-1" placeholder="Name" required />
-      <Input v-model="description" class="flex-1" placeholder="Description (optional)" />
-      <Button type="submit">Add</Button>
+    <form class="my-4 flex flex-wrap gap-2" data-testid="item-form" @submit.prevent="addItem">
+      <Input v-model="name" class="flex-1" placeholder="Name" required data-testid="item-name" />
+      <Input
+        v-model="description"
+        class="flex-1"
+        placeholder="Description (optional)"
+        data-testid="item-description"
+      />
+      <Button type="submit" data-testid="item-add">Add</Button>
     </form>
-    <p v-if="error" class="text-sm text-destructive">{{ error }}</p>
-    <ul class="mt-2">
-      <li v-for="item in items" :key="item.id" class="border-b py-2">
+    <p v-if="error" class="text-sm text-destructive" data-testid="home-error">{{ error }}</p>
+    <ul class="mt-2" data-testid="item-list">
+      <li v-for="item in items" :key="item.id" class="border-b py-2" data-testid="item">
         <strong>{{ item.name }}</strong>
         <span v-if="item.description" class="text-muted-foreground"> — {{ item.description }}</span>
       </li>
-      <li v-if="items.length === 0" class="py-2 text-muted-foreground">No items yet.</li>
+      <li v-if="items.length === 0" class="py-2 text-muted-foreground" data-testid="item-empty">
+        No items yet.
+      </li>
     </ul>
   </section>
 </template>

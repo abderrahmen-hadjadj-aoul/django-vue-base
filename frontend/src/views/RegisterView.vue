@@ -36,10 +36,17 @@ async function submit() {
       <CardTitle class="text-2xl">Create an account</CardTitle>
     </CardHeader>
     <CardContent>
-      <form class="flex flex-col gap-4" @submit.prevent="submit">
+      <form class="flex flex-col gap-4" data-testid="register-form" @submit.prevent="submit">
         <div class="grid gap-2">
           <Label for="email">Email</Label>
-          <Input id="email" v-model="email" type="email" autocomplete="email" required />
+          <Input
+            id="email"
+            v-model="email"
+            type="email"
+            autocomplete="email"
+            required
+            data-testid="register-email"
+          />
         </div>
         <div class="grid gap-2">
           <Label for="password">Password</Label>
@@ -49,14 +56,23 @@ async function submit() {
             type="password"
             autocomplete="new-password"
             required
+            data-testid="register-password"
           />
         </div>
-        <Button type="submit" :disabled="busy">{{ busy ? 'Creating…' : 'Sign up' }}</Button>
+        <Button type="submit" :disabled="busy" data-testid="register-submit">
+          {{ busy ? 'Creating…' : 'Sign up' }}
+        </Button>
       </form>
-      <p v-if="error" class="mt-3 text-sm text-destructive">{{ error }}</p>
+      <p v-if="error" class="mt-3 text-sm text-destructive" data-testid="register-error">
+        {{ error }}
+      </p>
       <p class="mt-4 text-sm text-muted-foreground">
         Already have an account?
-        <RouterLink to="/login" class="text-foreground underline-offset-4 hover:underline">
+        <RouterLink
+          to="/login"
+          class="text-foreground underline-offset-4 hover:underline"
+          data-testid="register-login-link"
+        >
           Log in
         </RouterLink>
       </p>
