@@ -1,0 +1,9 @@
+# Run both dev servers together:  mprocs
+# (launch from the project root, where this file lives)
+procs:
+  backend:
+    shell: ".venv/bin/python manage.py runserver"
+    cwd: backend
+  frontend:
+    shell: "pnpm dev"
+    cwd: frontend
