@@ -10,6 +10,12 @@ procs:
   frontend-typecheck:
     shell: "pnpm type-check"
     cwd: frontend
+  # Django unit tests. Not started automatically — select the proc in the mprocs
+  # UI and press `s` (start) to run on demand.
+  backend-tests:
+    shell: ".venv/bin/python manage.py test --verbosity=2"
+    cwd: backend
+    autostart: false
   # E2E (Gherkin via playwright-bdd, real backend). Not started automatically —
   # select the proc in the mprocs UI and press `s` (start) to run on demand.
   # These spin up their OWN dedicated servers (frontend :5273 → backend :8001 on
