@@ -53,15 +53,8 @@ class RegisterSerializer(serializers.ModelSerializer):
         validate_password(value)
         return value
 
-    def create(self, validated_data: dict) -> "User":
-        email = validated_data.pop("email")
-        password = validated_data.pop("password")
-        # Store the email in the username field too, so Django's built-in
-        # username-based auth (authenticate/login) works with email as the only
-        # credential and email uniqueness is enforced by username's constraint.
-        return User.objects.create_user(
-            username=email, email=email, password=password, **validated_data
-        )
+    # Creation lives in ``accounts.services.register_user`` (the view calls it
+    # with ``validated_data``); this serializer only validates and shapes input.
 
 
 class LoginSerializer(serializers.Serializer):

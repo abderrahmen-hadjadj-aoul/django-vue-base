@@ -8,7 +8,6 @@ CSRF protection rather than tokens. The flow is:
 2. It sends that value back in the ``X-CSRFToken`` header on unsafe requests.
 3. ``login`` / ``logout`` create and destroy the session cookie.
 """
-from django.conf import settings
 from django.contrib.auth import (
     authenticate,
     get_user_model,
@@ -16,9 +15,6 @@ from django.contrib.auth import (
     logout,
     update_session_auth_hash,
 )
-from django.contrib.auth.tokens import default_token_generator
-from django.utils.encoding import force_bytes, force_str
-from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.utils.decorators import method_decorator
 from drf_spectacular.utils import extend_schema
@@ -28,6 +24,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from . import services
 from .serializers import (
     DetailSerializer,
     LoginSerializer,
@@ -61,7 +58,7 @@ class RegisterView(APIView):
     def post(self, request: Request) -> Response:
         serializer = RegisterSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = serializer.save()
+        user = services.register_user(**serializer.validated_data)
         login(request, user)
         return Response(UserSerializer(user).data, status=status.HTTP_201_CREATED)
 
@@ -139,21 +136,7 @@ class PasswordResetRequestView(APIView):
     def post(self, request: Request) -> Response:
         serializer = PasswordResetRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        email = serializer.validated_data["email"]
-
-        for user in User.objects.filter(email__iexact=email, is_active=True):
-            uid = urlsafe_base64_encode(force_bytes(user.pk))
-            token = default_token_generator.make_token(user)
-            reset_url = f"{settings.FRONTEND_URL}/reset-password?uid={uid}&token={token}"
-            user.email_user(
-                subject="Reset your password",
-                message=(
-                    "Use the link below to choose a new password:\n\n"
-                    f"{reset_url}\n\n"
-                    "If you did not request this, you can ignore this email."
-                ),
-            )
-
+        services.send_password_reset_email(email=serializer.validated_data["email"])
         return Response(
             {"detail": "If that email exists, a reset link has been sent."}
         )
@@ -170,19 +153,11 @@ class PasswordResetConfirmView(APIView):
         serializer.is_valid(raise_exception=True)
 
         try:
-            uid = force_str(urlsafe_base64_decode(serializer.validated_data["uid"]))
-            user = User.objects.get(pk=uid)
-        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
-            user = None
-
-        if user is None or not default_token_generator.check_token(
-            user, serializer.validated_data["token"]
-        ):
+            services.reset_password(**serializer.validated_data)
+        except services.InvalidResetToken:
             return Response(
                 {"detail": "Invalid or expired reset link."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        user.set_password(serializer.validated_data["new_password"])
-        user.save(update_fields=["password"])
         return Response({"detail": "Password has been reset."})
