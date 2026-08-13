@@ -208,6 +208,39 @@ password-reset token minting/email, reset confirmation). The `api` app has
 custom logic, so a service there would just wrap the ORM and hide nothing. When
 an app grows real rules, that's the moment to introduce its `services.py`.
 
+## Backend tests (Django-style Gherkin)
+
+Backend tests are plain `APITestCase` methods run by `manage.py test` — **no
+pytest, no BDD framework, no `.feature` files** (that machinery is the
+frontend's e2e suite only). We borrow only the Gherkin *vocabulary* to structure
+each test, via a docstring and comment markers:
+
+- **One test method = one scenario.** Its docstring is `"""Scenario: <name>."""`
+- **Structure the body with uppercase `# GIVEN` / `# WHEN` / `# THEN` / `# AND`
+  comments**, in that order, each on its own line above the code it introduces.
+  `# GIVEN` = setup/preconditions, `# WHEN` = the action under test, `# THEN` =
+  assertions, `# AND` = a follow-on step of the same kind. A method may repeat
+  `# WHEN`/`# THEN` for a multi-step flow (e.g. login then logout).
+- The keywords are **only comments** — nothing enforces them, so keep them
+  honest: the code under a `# WHEN` should be the action, under a `# THEN` the
+  assertions. When a step needs no code (a fresh test DB already satisfies a
+  `# GIVEN`), keep the comment and note why.
+
+```python
+def test_login_logout(self) -> None:
+    """Scenario: A registered user can log in and then out."""
+    # GIVEN a registered user
+    User.objects.create_user("carol@example.com", "carol@example.com", "s3cret-pass-99")
+    # WHEN she logs in with the right credentials
+    resp = self.client.post(reverse("login"), {...}, format="json", **self._csrf_headers())
+    # THEN a session is established
+    self.assertEqual(resp.status_code, status.HTTP_200_OK)
+```
+
+`accounts/tests.py` and `api/tests.py` are the reference examples. This keeps the
+narrative benefit of Gherkin with zero tooling cost; if a suite ever outgrows it,
+reach for the frontend's playwright-bdd pattern rather than adding pytest-bdd here.
+
 ## Conventions
 
 - Backend settings are env-driven via django-environ; add new config as env vars
