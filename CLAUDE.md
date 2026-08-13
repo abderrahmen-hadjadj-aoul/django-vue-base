@@ -29,6 +29,7 @@ features that a consumer of the template wouldn't want.
 ```
 backend/    Django project: config/ (settings, urls), api/ (example app),
             accounts/ (session-cookie auth: /api/auth/…)
+            <app>/services.py  <- business logic (see "Business logic" below)
             openapi.json  <- exported schema, committed
 frontend/   Vue 3 + Vite + TS + shadcn-vue (Reka UI) + Tailwind CSS v4
             src/api/generated/  <- generated SDK, committed, DO NOT hand-edit
@@ -182,6 +183,30 @@ backend/api/e2e_views.py     the /api/test/ endpoints (gated behind E2E_MODE)
   `/reset-password?uid=…&token=…` route.
 - After changing any auth serializer/view, regenerate the schema + client (same
   two-step flow as above) so the frontend stays typed.
+
+## Business logic (service layer)
+
+Complex business logic goes in a per-app **`services.py`** — plain functions
+that hold domain rules and side effects (creating records, sending email,
+calling external APIs, multi-step workflows in a `transaction.atomic()`). The
+layering is **fat services, thin views, thin serializers**:
+
+- **View**: parse the request, call one service function, map the result or a
+  domain exception to an HTTP response. Nothing else.
+- **Serializer**: validation and request/response shape only. Keep field-level
+  rules here (they drive the OpenAPI schema), but don't put orchestration or
+  side effects in them.
+- **Service**: the actual business rules. Raises domain exceptions; the view
+  translates them to responses. Testable directly, without HTTP/DRF plumbing.
+- **Model**: only invariants intrinsic to one entity (a `@property`, `clean()`).
+  Cross-model workflows belong in a service, not a fat model.
+
+**Add a service only when logic actually appears — don't scaffold passthrough
+services.** `accounts/services.py` is the reference example (user creation,
+password-reset token minting/email, reset confirmation). The `api` app has
+**no** service on purpose: `ItemViewSet` is stock `ModelViewSet` CRUD with no
+custom logic, so a service there would just wrap the ORM and hide nothing. When
+an app grows real rules, that's the moment to introduce its `services.py`.
 
 ## Conventions
 
