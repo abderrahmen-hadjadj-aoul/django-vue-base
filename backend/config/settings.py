@@ -5,6 +5,7 @@ Values are read from environment variables (see .env.example) via django-environ
 so the same settings file works for local development and production.
 """
 
+import sys
 from pathlib import Path
 
 import environ
@@ -111,6 +112,13 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
+
+# When running the test suite, swap Django's deliberately-slow default password
+# hasher (PBKDF2, ~1M iterations) for MD5. Auth tests hash/verify passwords on
+# nearly every case, so this cuts the suite's runtime dramatically. Only affects
+# `manage.py test` — production keeps the secure default.
+if "test" in sys.argv:
+    PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
 
 
 # Internationalization
