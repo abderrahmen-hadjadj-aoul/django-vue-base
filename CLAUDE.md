@@ -8,6 +8,11 @@ to be cloned as the starting point for new projects so the initial plumbing
 already done. Keep changes generic and template-worthy — avoid app-specific
 features that a consumer of the template wouldn't want.
 
+## Git workflow
+
+- **Commit directly to `main` and push there** — no feature branches, no PRs for
+  routine work. `main` is the single working branch; there is no `master`.
+
 ## Stack
 
 - **Backend**: Django 5.2, Django REST Framework, drf-spectacular (OpenAPI),

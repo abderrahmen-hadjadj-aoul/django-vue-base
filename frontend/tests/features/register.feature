@@ -12,6 +12,13 @@ Feature: Registration
     Then I should be on the "home" page
     And "nav-user-email" should contain "new@example.com"
 
+  Scenario: The dev-only "Create random account" button signs up a random yopmail user
+    When I visit the "register" page
+    Then I should see "register-random"
+    When I click "register-random"
+    Then I should be on the "home" page
+    And "nav-user-email" should contain "@yopmail.com"
+
   Scenario: Registering an already-taken email shows an error
     Given a registered user with email "taken@example.com" and password "whatever"
     When I visit the "register" page

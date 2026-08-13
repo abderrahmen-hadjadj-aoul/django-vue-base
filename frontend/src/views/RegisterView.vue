@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { faker } from '@faker-js/faker'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -15,6 +16,18 @@ const email = ref('')
 const password = ref('')
 const error = ref('')
 const busy = ref(false)
+
+const isDev = import.meta.env.DEV
+
+async function createRandomAccount() {
+  // Insert a 5-char alphanumeric suffix before the "@" so each run is unique.
+  const suffix = faker.string.alphanumeric(5)
+  const [local] = faker.internet.email().split('@')
+  email.value = `${local}.${suffix}@yopmail.com`.toLowerCase()
+  // Password is set to the exact same value as the email.
+  password.value = email.value
+  await submit()
+}
 
 async function submit() {
   error.value = ''
@@ -61,6 +74,16 @@ async function submit() {
         </div>
         <Button type="submit" :disabled="busy" data-testid="register-submit">
           {{ busy ? 'Creating…' : 'Sign up' }}
+        </Button>
+        <Button
+          v-if="isDev"
+          type="button"
+          :disabled="busy"
+          class="bg-purple-600 text-white hover:bg-purple-700"
+          data-testid="register-random"
+          @click="createRandomAccount"
+        >
+          Create random account
         </Button>
       </form>
       <p v-if="error" class="mt-3 text-sm text-destructive" data-testid="register-error">
