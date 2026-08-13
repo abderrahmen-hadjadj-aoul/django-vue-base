@@ -157,7 +157,11 @@ export const healthRetrieve = <ThrowOnError extends boolean = false>(options?: O
 });
 
 /**
- * Full CRUD for the example Item model.
+ * Full CRUD for the example Item model, scoped to the owner.
+ *
+ * A user sees and mutates only their own items; staff users see and mutate
+ * all of them. Ownership is assigned server-side on create — never trust an
+ * ``owner`` from the request body (it is read-only on the serializer).
  */
 export const itemsList = <ThrowOnError extends boolean = false>(options?: Options<ItemsListData, ThrowOnError>): RequestResult<ItemsListResponses, unknown, ThrowOnError> => (options?.client ?? client).get<ItemsListResponses, unknown, ThrowOnError>({
     security: [{
@@ -170,7 +174,11 @@ export const itemsList = <ThrowOnError extends boolean = false>(options?: Option
 });
 
 /**
- * Full CRUD for the example Item model.
+ * Full CRUD for the example Item model, scoped to the owner.
+ *
+ * A user sees and mutates only their own items; staff users see and mutate
+ * all of them. Ownership is assigned server-side on create — never trust an
+ * ``owner`` from the request body (it is read-only on the serializer).
  */
 export const itemsCreate = <ThrowOnError extends boolean = false>(options: Options<ItemsCreateData, ThrowOnError>): RequestResult<ItemsCreateResponses, unknown, ThrowOnError> => (options.client ?? client).post<ItemsCreateResponses, unknown, ThrowOnError>({
     security: [{
@@ -187,7 +195,11 @@ export const itemsCreate = <ThrowOnError extends boolean = false>(options: Optio
 });
 
 /**
- * Full CRUD for the example Item model.
+ * Full CRUD for the example Item model, scoped to the owner.
+ *
+ * A user sees and mutates only their own items; staff users see and mutate
+ * all of them. Ownership is assigned server-side on create — never trust an
+ * ``owner`` from the request body (it is read-only on the serializer).
  */
 export const itemsDestroy = <ThrowOnError extends boolean = false>(options: Options<ItemsDestroyData, ThrowOnError>): RequestResult<ItemsDestroyResponses, unknown, ThrowOnError> => (options.client ?? client).delete<ItemsDestroyResponses, unknown, ThrowOnError>({
     security: [{
@@ -200,7 +212,11 @@ export const itemsDestroy = <ThrowOnError extends boolean = false>(options: Opti
 });
 
 /**
- * Full CRUD for the example Item model.
+ * Full CRUD for the example Item model, scoped to the owner.
+ *
+ * A user sees and mutates only their own items; staff users see and mutate
+ * all of them. Ownership is assigned server-side on create — never trust an
+ * ``owner`` from the request body (it is read-only on the serializer).
  */
 export const itemsRetrieve = <ThrowOnError extends boolean = false>(options: Options<ItemsRetrieveData, ThrowOnError>): RequestResult<ItemsRetrieveResponses, unknown, ThrowOnError> => (options.client ?? client).get<ItemsRetrieveResponses, unknown, ThrowOnError>({
     security: [{
@@ -213,7 +229,11 @@ export const itemsRetrieve = <ThrowOnError extends boolean = false>(options: Opt
 });
 
 /**
- * Full CRUD for the example Item model.
+ * Full CRUD for the example Item model, scoped to the owner.
+ *
+ * A user sees and mutates only their own items; staff users see and mutate
+ * all of them. Ownership is assigned server-side on create — never trust an
+ * ``owner`` from the request body (it is read-only on the serializer).
  */
 export const itemsPartialUpdate = <ThrowOnError extends boolean = false>(options: Options<ItemsPartialUpdateData, ThrowOnError>): RequestResult<ItemsPartialUpdateResponses, unknown, ThrowOnError> => (options.client ?? client).patch<ItemsPartialUpdateResponses, unknown, ThrowOnError>({
     security: [{
@@ -230,7 +250,11 @@ export const itemsPartialUpdate = <ThrowOnError extends boolean = false>(options
 });
 
 /**
- * Full CRUD for the example Item model.
+ * Full CRUD for the example Item model, scoped to the owner.
+ *
+ * A user sees and mutates only their own items; staff users see and mutate
+ * all of them. Ownership is assigned server-side on create — never trust an
+ * ``owner`` from the request body (it is read-only on the serializer).
  */
 export const itemsUpdate = <ThrowOnError extends boolean = false>(options: Options<ItemsUpdateData, ThrowOnError>): RequestResult<ItemsUpdateResponses, unknown, ThrowOnError> => (options.client ?? client).put<ItemsUpdateResponses, unknown, ThrowOnError>({
     security: [{

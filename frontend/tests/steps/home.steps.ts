@@ -15,6 +15,13 @@ Given('an item named {string} already exists', async ({ page }, name: string) =>
   await seedItem(page, name)
 })
 
+Given(
+  'an item named {string} owned by {string} already exists',
+  async ({ page }, name: string, owner: string) => {
+    await seedItem(page, name, owner)
+  },
+)
+
 // The account's current password is whatever loginAs set (E2E_PASSWORD), so
 // steps don't have to hard-code that magic value in the .feature files.
 When('I fill in my current password', async ({ page }) => {

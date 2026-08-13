@@ -20,6 +20,7 @@ export type Item = {
     name: string;
     description?: string;
     readonly created_at: string;
+    readonly owner: number;
 };
 
 /**
@@ -64,6 +65,7 @@ export type PatchedItem = {
     name?: string;
     description?: string;
     readonly created_at?: string;
+    readonly owner?: number;
 };
 
 /**
@@ -294,10 +296,7 @@ export type ItemsCreateResponse = ItemsCreateResponses[keyof ItemsCreateResponse
 export type ItemsDestroyData = {
     body?: never;
     path: {
-        /**
-         * A unique integer value identifying this item.
-         */
-        id: number;
+        id: string;
     };
     query?: never;
     url: '/api/items/{id}/';
@@ -315,10 +314,7 @@ export type ItemsDestroyResponse = ItemsDestroyResponses[keyof ItemsDestroyRespo
 export type ItemsRetrieveData = {
     body?: never;
     path: {
-        /**
-         * A unique integer value identifying this item.
-         */
-        id: number;
+        id: string;
     };
     query?: never;
     url: '/api/items/{id}/';
@@ -333,10 +329,7 @@ export type ItemsRetrieveResponse = ItemsRetrieveResponses[keyof ItemsRetrieveRe
 export type ItemsPartialUpdateData = {
     body?: PatchedItemWritable;
     path: {
-        /**
-         * A unique integer value identifying this item.
-         */
-        id: number;
+        id: string;
     };
     query?: never;
     url: '/api/items/{id}/';
@@ -351,10 +344,7 @@ export type ItemsPartialUpdateResponse = ItemsPartialUpdateResponses[keyof Items
 export type ItemsUpdateData = {
     body: ItemWritable;
     path: {
-        /**
-         * A unique integer value identifying this item.
-         */
-        id: number;
+        id: string;
     };
     query?: never;
     url: '/api/items/{id}/';

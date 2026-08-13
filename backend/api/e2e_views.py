@@ -99,11 +99,29 @@ class LoginAsView(E2EView):
 
 @method_decorator(csrf_exempt, name="dispatch")
 class SeedItemView(E2EView):
-    """Create an Item — for "an item named X already exists" steps."""
+    """Create an Item owned by a user — for "an item named X already exists".
+
+    Items are owner-scoped, so the harness must say who owns the seeded item.
+    The owner is upserted (with the known default password, so they can also log
+    in), matching how /login-as/ provisions users.
+    """
 
     def post(self, request: Request) -> Response:
+        # get_or_create (not _upsert_user): re-hashing an existing user's
+        # password would rotate their session auth hash and log them out — which
+        # matters when seeding items for the already-logged-in current user.
+        email = request.data["owner"].strip().lower()
+        owner, created = User.objects.get_or_create(
+            username=email, defaults={"email": email}
+        )
+        if created:
+            owner.set_password(DEFAULT_PASSWORD)
+            owner.is_active = True
+            owner.save()
         item = Item.objects.create(
-            name=request.data["name"], description=request.data.get("description", "")
+            owner=owner,
+            name=request.data["name"],
+            description=request.data.get("description", ""),
         )
         return Response({"id": item.pk, "name": item.name}, status=status.HTTP_201_CREATED)
 

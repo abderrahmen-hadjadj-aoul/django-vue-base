@@ -23,12 +23,25 @@ export const resetBackend = (page: Page) => post(page, '/api/test/reset/', {})
 export const seedUser = (page: Page, email: string, password: string) =>
   post(page, '/api/test/users/', { email, password })
 
-/** Create the user if needed and start a session ("I am logged in as…"). */
-export const loginAs = (page: Page, email: string) =>
-  post(page, '/api/test/login-as/', { email, password: E2E_PASSWORD })
+// The email of the last user we logged in as, so item-seeding steps can default
+// ownership to "the current user" without repeating the email in the feature.
+let currentUser: string | null = null
 
-/** Create an Item directly in the DB ("an item named X already exists"). */
-export const seedItem = (page: Page, name: string) => post(page, '/api/test/items/', { name })
+/** Create the user if needed and start a session ("I am logged in as…"). */
+export const loginAs = (page: Page, email: string) => {
+  currentUser = email
+  return post(page, '/api/test/login-as/', { email, password: E2E_PASSWORD })
+}
+
+/** Create an owner-scoped Item ("an item named X already exists"). Defaults the
+ *  owner to the currently logged-in user; pass `owner` to seed someone else's. */
+export const seedItem = (page: Page, name: string, owner?: string) => {
+  const ownerEmail = owner ?? currentUser
+  if (!ownerEmail) {
+    throw new Error('seedItem: no owner given and no user is logged in')
+  }
+  return post(page, '/api/test/items/', { name, owner: ownerEmail })
+}
 
 /** Mint a real reset link (uid+token) so a test can open a valid one. */
 export async function passwordResetLink(page: Page, email: string): Promise<string> {

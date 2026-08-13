@@ -349,7 +349,7 @@
         "/api/items/": {
             "get": {
                 "operationId": "items_list",
-                "description": "Full CRUD for the example Item model.",
+                "description": "Full CRUD for the example Item model, scoped to the owner.\n\nA user sees and mutates only their own items; staff users see and mutate\nall of them. Ownership is assigned server-side on create — never trust an\n``owner`` from the request body (it is read-only on the serializer).",
                 "parameters": [
                     {
                         "name": "page",
@@ -384,7 +384,7 @@
             },
             "post": {
                 "operationId": "items_create",
-                "description": "Full CRUD for the example Item model.",
+                "description": "Full CRUD for the example Item model, scoped to the owner.\n\nA user sees and mutates only their own items; staff users see and mutate\nall of them. Ownership is assigned server-side on create — never trust an\n``owner`` from the request body (it is read-only on the serializer).",
                 "tags": [
                     "items"
                 ],
@@ -430,15 +430,14 @@
         "/api/items/{id}/": {
             "get": {
                 "operationId": "items_retrieve",
-                "description": "Full CRUD for the example Item model.",
+                "description": "Full CRUD for the example Item model, scoped to the owner.\n\nA user sees and mutates only their own items; staff users see and mutate\nall of them. Ownership is assigned server-side on create — never trust an\n``owner`` from the request body (it is read-only on the serializer).",
                 "parameters": [
                     {
                         "in": "path",
                         "name": "id",
                         "schema": {
-                            "type": "integer"
+                            "type": "string"
                         },
-                        "description": "A unique integer value identifying this item.",
                         "required": true
                     }
                 ],
@@ -465,15 +464,14 @@
             },
             "put": {
                 "operationId": "items_update",
-                "description": "Full CRUD for the example Item model.",
+                "description": "Full CRUD for the example Item model, scoped to the owner.\n\nA user sees and mutates only their own items; staff users see and mutate\nall of them. Ownership is assigned server-side on create — never trust an\n``owner`` from the request body (it is read-only on the serializer).",
                 "parameters": [
                     {
                         "in": "path",
                         "name": "id",
                         "schema": {
-                            "type": "integer"
+                            "type": "string"
                         },
-                        "description": "A unique integer value identifying this item.",
                         "required": true
                     }
                 ],
@@ -520,15 +518,14 @@
             },
             "patch": {
                 "operationId": "items_partial_update",
-                "description": "Full CRUD for the example Item model.",
+                "description": "Full CRUD for the example Item model, scoped to the owner.\n\nA user sees and mutates only their own items; staff users see and mutate\nall of them. Ownership is assigned server-side on create — never trust an\n``owner`` from the request body (it is read-only on the serializer).",
                 "parameters": [
                     {
                         "in": "path",
                         "name": "id",
                         "schema": {
-                            "type": "integer"
+                            "type": "string"
                         },
-                        "description": "A unique integer value identifying this item.",
                         "required": true
                     }
                 ],
@@ -574,15 +571,14 @@
             },
             "delete": {
                 "operationId": "items_destroy",
-                "description": "Full CRUD for the example Item model.",
+                "description": "Full CRUD for the example Item model, scoped to the owner.\n\nA user sees and mutates only their own items; staff users see and mutate\nall of them. Ownership is assigned server-side on create — never trust an\n``owner`` from the request body (it is read-only on the serializer).",
                 "parameters": [
                     {
                         "in": "path",
                         "name": "id",
                         "schema": {
-                            "type": "integer"
+                            "type": "string"
                         },
-                        "description": "A unique integer value identifying this item.",
                         "required": true
                     }
                 ],
@@ -645,12 +641,17 @@
                         "type": "string",
                         "format": "date-time",
                         "readOnly": true
+                    },
+                    "owner": {
+                        "type": "integer",
+                        "readOnly": true
                     }
                 },
                 "required": [
                     "created_at",
                     "id",
-                    "name"
+                    "name",
+                    "owner"
                 ]
             },
             "Login": {
@@ -771,6 +772,10 @@
                     "created_at": {
                         "type": "string",
                         "format": "date-time",
+                        "readOnly": true
+                    },
+                    "owner": {
+                        "type": "integer",
                         "readOnly": true
                     }
                 }

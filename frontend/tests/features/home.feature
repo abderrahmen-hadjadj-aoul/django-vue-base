@@ -20,6 +20,13 @@ Feature: Home dashboard
     Then I should see 1 item
     And the item list should contain "Buy milk"
 
+  Scenario: Another user's items are not visible
+    Given an item named "Buy milk" already exists
+    And an item named "Their secret" owned by "someone-else@example.com" already exists
+    When I visit the "home" page
+    Then I should see 1 item
+    And the item list should contain "Buy milk"
+
   Scenario: Adding an item appends it to the list
     When I visit the "home" page
     And I fill in "item-name" with "Write tests"

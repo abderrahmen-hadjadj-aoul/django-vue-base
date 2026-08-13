@@ -204,9 +204,21 @@ layering is **fat services, thin views, thin serializers**:
 **Add a service only when logic actually appears — don't scaffold passthrough
 services.** `accounts/services.py` is the reference example (user creation,
 password-reset token minting/email, reset confirmation). The `api` app has
-**no** service on purpose: `ItemViewSet` is stock `ModelViewSet` CRUD with no
-custom logic, so a service there would just wrap the ORM and hide nothing. When
-an app grows real rules, that's the moment to introduce its `services.py`.
+**no** service on purpose: `ItemViewSet` is a `ModelViewSet` whose only custom
+logic is owner-scoping (a one-line `get_queryset` filter + `perform_create`
+owner assignment — see below), which is thin enough to stay in the view. A
+service there would just wrap the ORM and hide nothing. When the scoping grows
+real rules (teams, transfer-ownership, soft-delete), that's the moment to move
+it into `api/services.py`.
+
+**Item authorization (ownership + staff).** `Item` has an `owner` FK; items are
+scoped so a user sees/mutates only their own, while `is_staff` users bypass the
+scope. Two enforcement points, both needed: `ItemViewSet.get_queryset` filters
+by owner (so a non-owner's detail request **404s** — no existence leak), and
+`api/permissions.py:IsOwnerOrStaff` is the object-level guard on writes. `owner`
+is server-assigned in `perform_create` and read-only on the serializer, so a
+client can't spoof it. The e2e `seedItem` support endpoint takes an `owner`
+email (defaulting to the current logged-in user in `tests/support/backend.ts`).
 
 ## Backend tests (Django-style Gherkin)
 
