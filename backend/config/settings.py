@@ -113,12 +113,23 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
-# When running the test suite, swap Django's deliberately-slow default password
-# hasher (PBKDF2, ~1M iterations) for MD5. Auth tests hash/verify passwords on
-# nearly every case, so this cuts the suite's runtime dramatically. Only affects
-# `manage.py test` — production keeps the secure default.
+# Test-only speedups. Only apply when running `manage.py test` — production
+# keeps its secure/real defaults.
 if "test" in sys.argv:
+    # Swap Django's deliberately-slow default password hasher (PBKDF2, ~1M
+    # iterations) for MD5. Auth tests hash/verify passwords on nearly every
+    # case, so this cuts the suite's CPU time dramatically.
     PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
+    # Use the in-memory email backend so tests can read mail.outbox without a
+    # network connection.
+    EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
+    # Building any email's Message-ID header calls socket.getfqdn(), which can
+    # block for seconds on machines whose hostname has no reverse-DNS entry
+    # (that's the whole reason the reset test was slow). Prime Django's cached
+    # DNS name so the lookup never runs during tests.
+    from django.core.mail import message as _mail_message
+
+    _mail_message.DNS_NAME._fqdn = "localhost"
 
 
 # Internationalization
