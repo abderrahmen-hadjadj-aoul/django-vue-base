@@ -332,6 +332,41 @@ def test_login_logout(self) -> None:
 narrative benefit of Gherkin with zero tooling cost; if a suite ever outgrows it,
 reach for the frontend's playwright-bdd pattern rather than adding pytest-bdd here.
 
+### Coverage: 100% is the definition of DONE
+
+The backend suite is measured with **coverage.py** (config in `backend/.coveragerc`;
+also wired as the `backend-coverage` mprocs proc). **Run it regularly during
+development**, not just at the end:
+
+```bash
+cd backend && source .venv/bin/activate
+coverage run manage.py test && coverage report   # add --format html for htmlcov/
+```
+
+**The bar is absolute — work is only "DONE" when all three hold:**
+
+1. **100% of backend tests pass** (no failures, no errors),
+2. **100% line + branch coverage** (`TOTAL … 100%`), and
+3. **100% of the frontend UI e2e tests pass** — the full Playwright/
+   playwright-bdd suite is green (`cd frontend && pnpm test:e2e`; see "Frontend
+   E2E tests" above). All scenarios must pass, none skipped.
+
+Anything less than 100% on any of the three means the work is **not finished** —
+treat an uncovered line or a failing/skipped e2e scenario the same as a failing
+unit test. When coverage drops, add the
+missing scenario(s) following the Gherkin pattern above; don't lower the bar.
+Check the `Missing` column in `coverage report` to see exactly which
+lines/branches still need a test.
+
+**`# pragma: no cover` is not yours to add.** Excluding a line from coverage is a
+last-resort escape hatch for code that genuinely cannot or should not be tested
+here (e.g. blocks only reachable outside the Django suite). In an exceptional
+case you may **ask the maintainer for permission** to add one, explaining why —
+but **never add `# pragma: no cover` (or any coverage exclusion, including
+`.coveragerc` `omit`/`exclude_lines`) on your own initiative.** Only add it after
+the maintainer explicitly confirms. Absent that confirmation, the only way to a
+green report is a real test.
+
 ## Conventions
 
 - Backend settings are env-driven via django-environ, and **every variable is
