@@ -6,6 +6,9 @@ __pycache__/
 backend/db.sqlite3
 backend/staticfiles/
 backend/media/
+# Coverage.py artifacts (backend-coverage mprocs proc); .coveragerc is committed.
+backend/.coverage
+backend/htmlcov/
 .env
 !.env.example
 

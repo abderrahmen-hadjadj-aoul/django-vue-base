@@ -1,0 +1,21 @@
+# Coverage.py config for the backend test suite (run via the `backend-coverage`
+# mprocs proc: `coverage run manage.py test && coverage report`).
+[run]
+source = .
+branch = True
+omit =
+    .venv/*
+    */migrations/*
+    manage.py
+    config/wsgi.py
+    config/asgi.py
+    # Test files themselves aren't measured — they're the thing doing the measuring.
+    */tests.py
+
+[report]
+show_missing = True
+skip_covered = False
+
+[html]
+directory = htmlcov
+title = django-vue-base backend coverage
