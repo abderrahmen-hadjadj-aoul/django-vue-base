@@ -220,6 +220,84 @@ is server-assigned in `perform_create` and read-only on the serializer, so a
 client can't spoof it. The e2e `seedItem` support endpoint takes an `owner`
 email (defaulting to the current logged-in user in `tests/support/backend.ts`).
 
+## Audit logging (the `audit` app)
+
+Every request is recorded to the `AuditLog` table (`audit/models.py`) — **every
+method, including GET** — so there is a trace of who did what. Three hard rules
+shape the design; follow them when you add or audit an endpoint.
+
+**1. Recording is explicit, in the view — never middleware.** Views call
+`audit.services` themselves. There is deliberately no request middleware doing
+this implicitly; you should be able to see at the call site exactly what gets
+logged. The service only persists; it derives non-sensitive metadata (method,
+path, status, user, IP, user-agent) itself.
+
+**2. Redaction is the caller's job, and it is not generic.** There is **no**
+`redact()` helper and **no** global "sensitive keys" list. Each view knows its
+own payload and **builds the audit `body` explicitly, naming only the fields
+that are safe to log** and omitting the rest (passwords, tokens, reset uids).
+Encapsulate that in a small, endpoint-specific function when it repeats (e.g.
+`accounts/views.py:_email_only_audit_body` logs `email` for the email+secret
+endpoints; `ItemViewSet._audit_body` lists an Item's fields). Do **not**
+reintroduce a key-matching scrubber — if you're tempted, you're hiding the
+decision the caller is supposed to own.
+
+**3. Always record in two steps — there is only one pattern, and reads use it
+too.** `begin_request` **before** the action, then the action, then
+`finalize_request` **after** (inside a `transaction.atomic()`). There is **no**
+`record_request`/one-shot helper — do not add one. Every view, GET included,
+looks like this:
+
+```python
+# Step 1 — pending row BEFORE the action, committed on its own (autocommit).
+audit = audit_services.begin_request(request, body=_email_only_audit_body(request.data))
+# Step 2 — action, then finalize, in ONE transaction: commit together or not at all.
+with transaction.atomic():
+    user = services.register_user(**serializer.validated_data)
+    login(request, user)
+    response = Response(UserSerializer(user).data, status=201)
+    audit_services.finalize_request(audit, response)   # pending=False, real status
+return response
+```
+
+A read looks the same — the "action" is just the query and there's nothing to
+roll back, but the shape is identical so the rule has no exceptions:
+
+```python
+def list(self, request, *args, **kwargs):
+    audit = audit_services.begin_request(request)
+    with transaction.atomic():
+        response = super().list(request, *args, **kwargs)
+        audit_services.finalize_request(audit, response)
+    return response
+```
+
+- `begin_request` writes `pending=True`, `status_code=NULL`. If the action later
+  raises, the `transaction.atomic()` block rolls back the action **and** the
+  finalize, leaving the `pending=True` row as the trace of a failed/incomplete
+  attempt. That includes handled domain errors (e.g. a bad reset token, a
+  validation 400): the row stays `pending` rather than showing a final status.
+- `begin_request`/`finalize_request` **do not swallow** errors — auditing is a
+  precondition of the request, so failing to write the trace aborts/rolls back
+  the action (fail closed).
+- Call `begin_request` **outside** the `transaction.atomic()` block; only the
+  action and `finalize_request` go inside it (see the invariant below).
+
+**Critical invariant: `ATOMIC_REQUESTS` must stay off** (it is — see
+`config/settings.py`). Step 1 relies on autocommit so the pending row commits
+immediately, *outside* the action's transaction; with `ATOMIC_REQUESTS` the
+whole view is one transaction and a rollback would erase the pending row too.
+`begin_request` guards this and raises if `ATOMIC_REQUESTS` is enabled. (Note:
+Django `TestCase` wraps each test in a transaction; that's why the guard checks
+the `ATOMIC_REQUESTS` *setting* rather than a runtime `in_atomic_block` — the
+latter would false-positive in tests.)
+
+Reference: `audit/services.py` (`begin_request`/`finalize_request` + docstrings),
+`accounts/views.py` and `api/views.py` (call sites). Config is env-driven:
+`AUDIT_LOG_ENABLED`, `AUDIT_MAX_BODY_BYTES` (see `.env.example`). The `audit` app
+is admin-read-only (`audit/admin.py`) and adds no API endpoints, so it doesn't
+touch `openapi.json`.
+
 ## Backend tests (Django-style Gherkin)
 
 Backend tests are plain `APITestCase` methods run by `manage.py test` — **no

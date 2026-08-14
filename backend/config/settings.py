@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     # Local apps
     "accounts",
     "api",
+    "audit",
 ]
 
 MIDDLEWARE = [
@@ -200,3 +201,13 @@ DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL")
 
 # Base URL of the frontend, used to build links in emails (e.g. password reset).
 FRONTEND_URL = env("FRONTEND_URL").rstrip("/")
+
+
+# Audit logging (see the `audit` app). Every view records one AuditLog row per
+# request — any method, including GET — via the write-ahead pair
+# `audit.services.begin_request` (before the action) and `finalize_request`
+# (after, in the action's transaction). Each caller builds the audit body itself,
+# including only the fields that are safe to log; the service stores it verbatim.
+AUDIT_LOG_ENABLED = env.bool("AUDIT_LOG_ENABLED", default=True)
+# Bodies larger than this (bytes) are noted but not stored, to bound row size.
+AUDIT_MAX_BODY_BYTES = env.int("AUDIT_MAX_BODY_BYTES", default=8192)

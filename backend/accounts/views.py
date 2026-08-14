@@ -15,6 +15,7 @@ from django.contrib.auth import (
     logout,
     update_session_auth_hash,
 )
+from django.db import transaction
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.utils.decorators import method_decorator
 from drf_spectacular.utils import extend_schema
@@ -23,6 +24,8 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+from audit import services as audit_services
 
 from . import services
 from .serializers import (
@@ -38,6 +41,14 @@ from .serializers import (
 User = get_user_model()
 
 
+def _email_only_audit_body(data) -> dict:
+    """Audit body for the email + secret endpoints (register, login, reset
+    request): keep the email so the trail is useful, never log the accompanying
+    password or token. Written for these payloads specifically — not a generic
+    field filter."""
+    return {"email": data.get("email")}
+
+
 @method_decorator(ensure_csrf_cookie, name="get")
 class CsrfView(APIView):
     """Set the CSRF cookie so the SPA can read it and echo it back in headers."""
@@ -46,7 +57,11 @@ class CsrfView(APIView):
 
     @extend_schema(responses=DetailSerializer)
     def get(self, request: Request) -> Response:
-        return Response({"detail": "CSRF cookie set."})
+        audit = audit_services.begin_request(request)
+        with transaction.atomic():
+            response = Response({"detail": "CSRF cookie set."})
+            audit_services.finalize_request(audit, response)
+        return response
 
 
 class RegisterView(APIView):
@@ -58,9 +73,15 @@ class RegisterView(APIView):
     def post(self, request: Request) -> Response:
         serializer = RegisterSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = services.register_user(**serializer.validated_data)
-        login(request, user)
-        return Response(UserSerializer(user).data, status=status.HTTP_201_CREATED)
+        # Write-ahead audit: pending row first, then create-the-user and finalize
+        # in one transaction so a user is never created without a finalized trace.
+        audit = audit_services.begin_request(request, body=_email_only_audit_body(request.data))
+        with transaction.atomic():
+            user = services.register_user(**serializer.validated_data)
+            login(request, user)
+            response = Response(UserSerializer(user).data, status=status.HTTP_201_CREATED)
+            audit_services.finalize_request(audit, response)
+        return response
 
 
 class LoginView(APIView):
@@ -72,19 +93,24 @@ class LoginView(APIView):
     def post(self, request: Request) -> Response:
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        # The email is stored as the username, so authenticate by it.
-        user = authenticate(
-            request,
-            username=serializer.validated_data["email"],
-            password=serializer.validated_data["password"],
-        )
-        if user is None:
-            return Response(
-                {"detail": "Invalid email or password."},
-                status=status.HTTP_400_BAD_REQUEST,
+        audit = audit_services.begin_request(request, body=_email_only_audit_body(request.data))
+        with transaction.atomic():
+            # The email is stored as the username, so authenticate by it.
+            user = authenticate(
+                request,
+                username=serializer.validated_data["email"],
+                password=serializer.validated_data["password"],
             )
-        login(request, user)
-        return Response(UserSerializer(user).data)
+            if user is None:
+                response = Response(
+                    {"detail": "Invalid email or password."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            else:
+                login(request, user)
+                response = Response(UserSerializer(user).data)
+            audit_services.finalize_request(audit, response)
+        return response
 
 
 class LogoutView(APIView):
@@ -94,8 +120,12 @@ class LogoutView(APIView):
 
     @extend_schema(request=None, responses={200: DetailSerializer})
     def post(self, request: Request) -> Response:
-        logout(request)
-        return Response({"detail": "Logged out."})
+        audit = audit_services.begin_request(request)
+        with transaction.atomic():
+            logout(request)
+            response = Response({"detail": "Logged out."})
+            audit_services.finalize_request(audit, response)
+        return response
 
 
 class MeView(APIView):
@@ -105,7 +135,11 @@ class MeView(APIView):
 
     @extend_schema(responses=UserSerializer)
     def get(self, request: Request) -> Response:
-        return Response(UserSerializer(request.user).data)
+        audit = audit_services.begin_request(request)
+        with transaction.atomic():
+            response = Response(UserSerializer(request.user).data)
+            audit_services.finalize_request(audit, response)
+        return response
 
 
 class PasswordChangeView(APIView):
@@ -119,11 +153,16 @@ class PasswordChangeView(APIView):
             data=request.data, context={"request": request}
         )
         serializer.is_valid(raise_exception=True)
-        request.user.set_password(serializer.validated_data["new_password"])
-        request.user.save(update_fields=["password"])
-        # Keep the current session valid after the password hash changes.
-        update_session_auth_hash(request, request.user)
-        return Response({"detail": "Password updated."})
+        # No body logged: every field here (old + new password) is a secret.
+        audit = audit_services.begin_request(request)
+        with transaction.atomic():
+            request.user.set_password(serializer.validated_data["new_password"])
+            request.user.save(update_fields=["password"])
+            # Keep the current session valid after the password hash changes.
+            update_session_auth_hash(request, request.user)
+            response = Response({"detail": "Password updated."})
+            audit_services.finalize_request(audit, response)
+        return response
 
 
 class PasswordResetRequestView(APIView):
@@ -136,10 +175,14 @@ class PasswordResetRequestView(APIView):
     def post(self, request: Request) -> Response:
         serializer = PasswordResetRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        services.send_password_reset_email(email=serializer.validated_data["email"])
-        return Response(
-            {"detail": "If that email exists, a reset link has been sent."}
-        )
+        audit = audit_services.begin_request(request, body=_email_only_audit_body(request.data))
+        with transaction.atomic():
+            services.send_password_reset_email(email=serializer.validated_data["email"])
+            response = Response(
+                {"detail": "If that email exists, a reset link has been sent."}
+            )
+            audit_services.finalize_request(audit, response)
+        return response
 
 
 class PasswordResetConfirmView(APIView):
@@ -152,12 +195,18 @@ class PasswordResetConfirmView(APIView):
         serializer = PasswordResetConfirmSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
+        # No body logged: uid, token and new password are all sensitive.
+        audit = audit_services.begin_request(request)
         try:
-            services.reset_password(**serializer.validated_data)
+            with transaction.atomic():
+                services.reset_password(**serializer.validated_data)
+                response = Response({"detail": "Password has been reset."})
+                audit_services.finalize_request(audit, response)
         except services.InvalidResetToken:
-            return Response(
+            # Bad token: the transaction rolled back, so nothing was mutated and
+            # the pending audit row remains as the trace of a failed attempt.
+            response = Response(
                 {"detail": "Invalid or expired reset link."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
-        return Response({"detail": "Password has been reset."})
+        return response

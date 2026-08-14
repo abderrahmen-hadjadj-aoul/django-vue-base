@@ -10,6 +10,12 @@ procs:
   frontend-typecheck:
     shell: "pnpm type-check"
     cwd: frontend
+  # Apply Django migrations. Not started automatically — select the proc in the
+  # mprocs UI and press `s` (start) to run on demand.
+  backend-migrate:
+    shell: ".venv/bin/python manage.py migrate"
+    cwd: backend
+    autostart: false
   # Django unit tests. Not started automatically — select the proc in the mprocs
   # UI and press `s` (start) to run on demand.
   backend-tests:
