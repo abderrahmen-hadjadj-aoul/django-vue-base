@@ -7,11 +7,15 @@ structure the body. No BDD framework, no feature files.
 from unittest.mock import Mock, patch
 
 from django.contrib.auth import get_user_model
+from django.db import connection
 from django.test import override_settings
 from rest_framework import status
 from rest_framework.test import APITestCase
 
+from django.contrib.admin.sites import AdminSite
+
 from . import services
+from .admin import AuditLogAdmin
 from .models import AuditLog
 
 User = get_user_model()
@@ -102,6 +106,17 @@ class AuditLoggingTests(APITestCase):
         self.assertEqual(AuditLog.objects.count(), 0)
 
 
+class AuditLogAdminTests(APITestCase):
+    def test_admin_is_read_only(self):
+        """Scenario: The audit admin forbids adding and editing rows."""
+        # GIVEN the registered admin
+        admin = AuditLogAdmin(AuditLog, AdminSite())
+        # WHEN add/change permissions are checked
+        # THEN both are denied — the trail is append-only via code, never the UI
+        self.assertFalse(admin.has_add_permission(Mock()))
+        self.assertFalse(admin.has_change_permission(Mock()))
+
+
 class BeginFinalizeUnitTests(APITestCase):
     def _fake_request(self):
         request = Mock()
@@ -135,6 +150,47 @@ class BeginFinalizeUnitTests(APITestCase):
         audit.refresh_from_db()
         self.assertFalse(audit.pending)
         self.assertEqual(audit.status_code, 201)
+
+    def test_forwarded_for_takes_the_first_client_ip(self):
+        """Scenario: Behind a proxy, the first X-Forwarded-For hop is recorded."""
+        # GIVEN a request that arrived through proxies (X-Forwarded-For set)
+        request = self._fake_request()
+        request.META["HTTP_X_FORWARDED_FOR"] = "203.0.113.7, 10.0.0.1"
+        # WHEN the pending row is written
+        services.begin_request(request, body={"email": "x@example.com"})
+        # THEN the originating client IP (first hop) is stored, not the proxy
+        entry = AuditLog.objects.get()
+        self.assertEqual(entry.ip, "203.0.113.7")
+
+    def test_finalize_records_duration_ms_when_given(self):
+        """Scenario: A caller that measured the request stamps its duration."""
+        # GIVEN a pending row
+        audit = services.begin_request(self._fake_request(), body={"email": "x@example.com"})
+        # WHEN it is finalized with an explicit duration
+        services.finalize_request(audit, Mock(status_code=200), duration_ms=42)
+        # THEN the duration is persisted alongside the outcome
+        audit.refresh_from_db()
+        self.assertEqual(audit.duration_ms, 42)
+
+    def test_begin_request_refuses_atomic_requests(self):
+        """Scenario: begin_request fails closed if ATOMIC_REQUESTS is enabled."""
+        # GIVEN a database configured with ATOMIC_REQUESTS (would swallow the
+        # write-ahead pending row in a rollback)
+        with patch.dict(connection.settings_dict, {"ATOMIC_REQUESTS": True}):
+            # WHEN a pending row is attempted
+            # THEN it raises rather than recording an unsafe trace
+            with self.assertRaises(RuntimeError):
+                services.begin_request(self._fake_request())
+
+    def test_audit_log_str(self):
+        """Scenario: An AuditLog renders a readable one-line summary."""
+        # GIVEN a finalized audit row
+        audit = services.begin_request(self._fake_request(), body={"email": "x@example.com"})
+        services.finalize_request(audit, Mock(status_code=201))
+        audit.refresh_from_db()
+        # WHEN it is rendered as a string
+        # THEN it summarises method, path, outcome and actor
+        self.assertEqual(str(audit), "POST /api/example/ -> 201 (anon)")
 
     @override_settings(AUDIT_MAX_BODY_BYTES=10)
     def test_oversized_body_is_replaced_with_a_note(self):

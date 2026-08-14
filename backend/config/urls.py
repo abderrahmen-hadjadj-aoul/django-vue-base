@@ -11,5 +11,5 @@ urlpatterns = [
 
 # Test-support endpoints for the Playwright e2e suite. Gated behind E2E_MODE so
 # they never exist in a normal deployment (see api/e2e_views.py).
-if settings.E2E_MODE:
+if settings.E2E_MODE:  # pragma: no cover - E2E-only wiring, exercised by the Playwright suite
     urlpatterns += [path("api/test/", include("api.e2e_urls"))]

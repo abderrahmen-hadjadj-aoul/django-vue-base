@@ -203,6 +203,66 @@ class AuthFlowTests(APITestCase):
         user.refresh_from_db()
         self.assertTrue(user.check_password("reset-pass-9999"))
 
+    def test_password_change_rejects_wrong_old_password(self) -> None:
+        """Scenario: Changing a password with the wrong current password is rejected."""
+        # GIVEN a logged-in user
+        User.objects.create_user("gina@example.com", "gina@example.com", "old-pass-1234")
+        self.client.post(
+            reverse("login"),
+            {"email": "gina@example.com", "password": "old-pass-1234"},
+            format="json",
+            **self._csrf_headers(),
+        )
+
+        # WHEN she submits the wrong current password
+        resp = self.client.post(
+            reverse("password-change"),
+            {"old_password": "not-my-password", "new_password": "new-pass-5678"},
+            format="json",
+            **self._csrf_headers(),
+        )
+        # THEN the request is rejected and the password is unchanged
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        gina = User.objects.get(email="gina@example.com")
+        self.assertTrue(gina.check_password("old-pass-1234"))
+
+    def test_password_reset_confirm_rejects_bad_token(self) -> None:
+        """Scenario: Confirming a reset with a valid uid but wrong token is rejected."""
+        # GIVEN a registered user
+        user = User.objects.create_user(
+            "hank@example.com", "hank@example.com", "old-pass-1234"
+        )
+
+        # WHEN she confirms with a correctly-encoded uid but a bogus token
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+        resp = self.client.post(
+            reverse("password-reset-confirm"),
+            {"uid": uid, "token": "not-a-real-token", "new_password": "reset-pass-9999"},
+            format="json",
+            **self._csrf_headers(),
+        )
+        # THEN it is rejected and the old password still works
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        user.refresh_from_db()
+        self.assertTrue(user.check_password("old-pass-1234"))
+
+    def test_password_reset_confirm_rejects_unknown_uid(self) -> None:
+        """Scenario: Confirming a reset for a uid that decodes to no user is rejected."""
+        # GIVEN no user matching the encoded uid (fresh test DB, pk 999 absent)
+        uid = urlsafe_base64_encode(force_bytes(999))
+        token = default_token_generator.make_token(
+            User.objects.create_user("iris@example.com", "iris@example.com", "pw-1234-abcd")
+        )
+        # WHEN a reset is confirmed against the missing user's uid
+        resp = self.client.post(
+            reverse("password-reset-confirm"),
+            {"uid": uid, "token": token, "new_password": "reset-pass-9999"},
+            format="json",
+            **self._csrf_headers(),
+        )
+        # THEN it is rejected (the uid decodes but matches no user)
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
     def test_password_reset_unknown_email_is_quiet(self) -> None:
         """Scenario: A reset for an unknown email is quietly ignored."""
         # WHEN a reset is requested for an email with no account

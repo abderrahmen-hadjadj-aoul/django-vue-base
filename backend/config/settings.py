@@ -97,7 +97,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Test-only speedups. Only apply when running `manage.py test` — production
 # keeps its secure/real defaults.
-if "test" in sys.argv:
+if "test" in sys.argv:  # pragma: no cover - test-only setup; the false branch never runs under coverage
     # Swap Django's deliberately-slow default password hasher (PBKDF2, ~1M
     # iterations) for MD5. Auth tests hash/verify passwords on nearly every
     # case, so this cuts the suite's CPU time dramatically.
