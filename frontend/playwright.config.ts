@@ -40,13 +40,24 @@ export default defineConfig({
       url: `${BACKEND_URL}/api/health/`,
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,
+      // settings.py requires EVERY env var (no defaults, fails closed — see
+      // backend/config/env.py), so the e2e backend passes the full set here.
+      // This keeps the suite hermetic: it never depends on a developer's local
+      // backend/.env (which may not exist, e.g. in CI).
       env: {
+        SECRET_KEY: 'django-insecure-e2e-only',
+        DEBUG: 'True',
+        ALLOWED_HOSTS: 'localhost,127.0.0.1',
         DATABASE_URL: 'sqlite:///db.e2e.sqlite3',
         E2E_MODE: 'True',
-        DEBUG: 'True',
         CSRF_TRUSTED_ORIGINS: E2E_ORIGINS,
         CORS_ALLOWED_ORIGINS: E2E_ORIGINS,
         FRONTEND_URL: BASE_URL,
+        SESSION_COOKIE_SECURE: 'False',
+        CSRF_COOKIE_SECURE: 'False',
+        DEFAULT_FROM_EMAIL: 'webmaster@localhost',
+        AUDIT_LOG_ENABLED: 'True',
+        AUDIT_MAX_BODY_BYTES: '8192',
         // The reset flow "sends" an email; the dummy backend discards it. This
         // also avoids the ~5s one-time socket.getfqdn() the console backend does
         // when it builds the first message (which would race step timeouts). The

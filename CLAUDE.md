@@ -51,6 +51,7 @@ Backend (from `backend/`, venv activated):
 ```bash
 python3 -m venv .venv && source .venv/bin/activate   # first time
 pip install -r requirements.txt
+cp .env.example .env   # first time — REQUIRED: every env var is mandatory (see below)
 python manage.py migrate
 python manage.py runserver          # :8000
 python manage.py test
@@ -333,9 +334,17 @@ reach for the frontend's playwright-bdd pattern rather than adding pytest-bdd he
 
 ## Conventions
 
-- Backend settings are env-driven via django-environ; add new config as env vars
-  with sane defaults, and document them in `backend/.env.example`. Never commit a
-  real `.env` or secrets.
+- Backend settings are env-driven via django-environ, and **every variable is
+  mandatory — there are no defaults**. `config/env.py` is the single source of
+  truth: it holds the required-var list (`_SPECS`), reads `.env`, prints a
+  startup report, and **fails closed** (raises `ImproperlyConfigured`, listing
+  every missing var) if any are absent. So the app won't start without a
+  complete `.env` — `cp .env.example .env` is a required first step (that also
+  applies to `manage.py test`; the e2e run passes the full set via
+  `playwright.config.ts`). To add config: add a `(name, cast, secret)` row to
+  `_SPECS`, read it from the returned `ENV` dict in `settings.py`, and document
+  it in `backend/.env.example` (keep all three in sync). Never commit a real
+  `.env` or secrets.
 - Frontend is strict TypeScript. Configure the API base URL only in
   `src/api/index.ts` (via `VITE_API_BASE_URL`, empty in dev so the proxy works).
 
