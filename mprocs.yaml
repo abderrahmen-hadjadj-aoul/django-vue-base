@@ -30,6 +30,16 @@ procs:
     shell: ".venv/bin/coverage run manage.py test && .venv/bin/coverage report && .venv/bin/coverage html"
     cwd: backend
     autostart: false
+  # Create a DEVELOPMENT-ONLY admin/superuser so you can log into /admin/.
+  # Credentials: admin@example.com / admin (email is used as the username to
+  # match this app's email-as-identity convention — see CLAUDE.md). Idempotent:
+  # `|| true` swallows the "already exists" error on re-run. Not started
+  # automatically — select the proc in the mprocs UI and press `s` to run.
+  # NEVER use these creds (or this proc) in production.
+  backend-createadmin:
+    shell: "DJANGO_SUPERUSER_PASSWORD=admin .venv/bin/python manage.py createsuperuser --noinput --username admin@example.com --email admin@example.com || true"
+    cwd: backend
+    autostart: false
   # E2E (Gherkin via playwright-bdd, real backend). Not started automatically —
   # select the proc in the mprocs UI and press `s` (start) to run on demand.
   # These spin up their OWN dedicated servers (frontend :5273 → backend :8001 on
