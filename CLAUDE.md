@@ -351,6 +351,15 @@ coverage run manage.py test && coverage report   # add --format html for htmlcov
    playwright-bdd suite is green (`cd frontend && pnpm test:e2e`; see "Frontend
    E2E tests" above). All scenarios must pass, none skipped.
 
+**Run all three with one command: `./check.sh`** (at the repo root). It runs the
+backend coverage tests (enforcing `--fail-under=100`), then the frontend
+type-check, then the frontend e2e suite — sequentially, each one running even if
+an earlier one fails — and prints a per-item **OK / NOT OK** summary plus a
+single **GLOBAL OK / NOT OK** verdict at the end. It exits non-zero unless all
+three pass. It's also wired as the `check` mprocs proc (`autostart: false` —
+select it and press `s`). **Work is only DONE when `./check.sh` reports
+`GLOBAL … OK`** — treat a `NOT OK` on any item exactly as described below.
+
 Anything less than 100% on any of the three means the work is **not finished** —
 treat an uncovered line or a failing/skipped e2e scenario the same as a failing
 unit test. When coverage drops, add the

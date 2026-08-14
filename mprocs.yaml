@@ -45,3 +45,11 @@ procs:
     shell: "pnpm test:e2e:ui"
     cwd: frontend
     autostart: false
+  # The DONE gate. Runs all three DONE checks sequentially (backend coverage
+  # tests at 100%, frontend type-check, frontend e2e) and prints a per-item
+  # OK / NOT OK summary plus a single GLOBAL verdict. Work is only DONE when it
+  # reports GLOBAL … OK. Not started automatically — select the proc and press
+  # `s` (start) to run on demand.
+  check:
+    shell: "./check.sh"
+    autostart: false
